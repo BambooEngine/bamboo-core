@@ -211,19 +211,16 @@ func isSpellingCorrect(composition []*Transformation, mode Mode) bool {
 	return false
 }
 
-func haveDoubledKeystroke(composition []*Transformation, key rune) bool {
-	if len(composition) < 2 {
-		return false
-	}
-	var lastTrans = composition[len(composition)-1]
-	// the last one must have the same key
-	if lastTrans.Rule.Key != key {
-		return false
-	}
-	var rightmostTrans = composition[len(composition)-2]
-	// the right most one mustn't be an appending one
-	if rightmostTrans.Rule.Key == key && rightmostTrans.Target != nil {
+func isSpellingSensible(composition []*Transformation, mode Mode) bool {
+	if len(composition) <= 1 {
 		return true
+	}
+	if mode&NoTone != 0 {
+		str := Flatten(composition, NoTone|LowerCase)
+		if len([]rune(str)) <= 1 {
+			return true
+		}
+		return LookupVnlDictionary(str)
 	}
 	return false
 }

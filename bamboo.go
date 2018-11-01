@@ -68,6 +68,7 @@ type IEngine interface {
 	ProcessString(string)
 	GetProcessedString(Mode) string
 	IsSpellingCorrect(Mode) bool
+	IsSpellingSensible(Mode) bool
 	Reset()
 	RemoveLastChar()
 }
@@ -195,6 +196,10 @@ func (e *BambooEngine) IsSpellingCorrect(mode Mode) bool {
 	return isSpellingCorrect(e.composition, mode)
 }
 
+func (e *BambooEngine) IsSpellingSensible(mode Mode) bool {
+	return isSpellingSensible(e.composition, mode)
+}
+
 func (e *BambooEngine) createCompositionForKey(chr rune) []*Transformation {
 	var isUpperCase bool
 	if unicode.IsUpper(chr) {
@@ -257,14 +262,6 @@ func (e *BambooEngine) ProcessChar(key rune) {
 	}
 	transformations := e.createCompositionForKey(key)
 	e.composition = append(e.composition, transformations...)
-
-	// double-keystroke to revert last effect, e.g in telex ww->w, ff->f, ss->s,...
-	if e.isEffectiveKey(key) && haveDoubledKeystroke(e.composition, key) {
-		e.composition = e.composition[0 : len(e.composition)-2]
-		e.composition = append(e.composition, &Transformation{
-			Rule: Rule{Key: key, EffectType: Appending, EffectOn: key},
-		})
-	}
 
 	/**
 	* Sometimes, a tone's position in a previous state must be changed to fit the new state
