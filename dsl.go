@@ -44,7 +44,7 @@ const (
 )
 
 // type alias
-type Mark = Tone
+type Mark uint8
 
 const (
 	MARK_NONE  Mark = iota << 0
@@ -67,10 +67,26 @@ const (
 
 type Rule struct {
 	Key           rune
-	Effect        Mark // (Tone, Mark)
+	Effect        uint8 // (Tone, Mark)
 	EffectType    EffectType
 	EffectOn      rune
 	AppendedRules []Rule
+}
+
+func (r *Rule) SetTone(tone Tone) {
+	r.Effect = uint8(tone)
+}
+
+func (r *Rule) SetMark(mark Mark) {
+	r.Effect = uint8(mark)
+}
+
+func (r *Rule) GetTone() Tone {
+	return Tone(r.Effect)
+}
+
+func (r *Rule) GetMark() Mark {
+	return Mark(r.Effect)
 }
 
 type InputMethod struct {
@@ -108,7 +124,7 @@ func ParseRules(key rune, line string) []Rule {
 		var rule Rule
 		rule.Key = key
 		rule.EffectType = ToneTransformation
-		rule.Effect = tone
+		rule.Effect = uint8(tone)
 		rules = append(rules, rule)
 	} else {
 		rules = ParseTonelessRules(key, line)
@@ -132,7 +148,7 @@ func ParseTonelessRules(key rune, line string) []Rule {
 			rule.Key = key
 			rule.EffectType = MarkTransformation
 			rule.EffectOn = effectiveOn
-			rule.Effect = effect
+			rule.Effect = uint8(effect)
 
 			rules = append(rules, rule)
 		}
@@ -160,7 +176,7 @@ func getAppendingRule(key rune, value string) (Rule, bool) {
 				rule.AppendedRules = append(rule.AppendedRules, Rule{
 					Key:        key,
 					EffectType: Appending,
-					EffectOn:     chr,
+					EffectOn:   chr,
 				})
 			}
 		}
