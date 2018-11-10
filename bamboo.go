@@ -69,7 +69,7 @@ type IEngine interface {
 	ProcessString(string)
 	GetProcessedString(Mode) string
 	IsSpellingCorrect(Mode) bool
-	IsSpellingSensible(Mode) bool
+	IsLikelySpellingCorrect(Mode) bool
 	Reset()
 	RemoveLastChar()
 }
@@ -190,9 +190,12 @@ func (e *BambooEngine) createCompositionForRule(rule Rule, isUpperKey bool) []*T
 	var trans = new(Transformation)
 	trans.Rule = rule
 	trans.IsUpperCase = isUpperKey
-	if target, applicableRule := e.findTargetForKey(rule.Key); target != nil {
-		trans.Rule = applicableRule
-		trans.Target = target
+	if e.flags&EspellCheckEnabled!=0 && !isLikelySpellingCorrect(e.composition, NoTone|LowerCase) {
+	} else {
+		if target, applicableRule := e.findTargetForKey(rule.Key); target != nil {
+			trans.Rule = applicableRule
+			trans.Target = target
+		}
 	}
 	transformations = append(transformations, trans)
 	for _, appendedRule := range trans.Rule.AppendedRules {
@@ -205,8 +208,8 @@ func (e *BambooEngine) IsSpellingCorrect(mode Mode) bool {
 	return isSpellingCorrect(e.composition, mode)
 }
 
-func (e *BambooEngine) IsSpellingSensible(mode Mode) bool {
-	return isSpellingSensible(e.composition, mode)
+func (e *BambooEngine) IsLikelySpellingCorrect(mode Mode) bool {
+	return isLikelySpellingCorrect(e.composition, mode)
 }
 
 func (e *BambooEngine) createCompositionForKey(chr rune) []*Transformation {
@@ -256,8 +259,10 @@ func (e *BambooEngine) refreshLastToneTarget() {
 
 func (e *BambooEngine) ProcessChar(key rune) {
 	if len(e.composition) > 0 && e.isEffectiveKey(key) {
+		// garbage collection
+		e.composition = freeComposition(e.composition)
+
 		if target, _ := e.findTargetForKey(key); target == nil {
-			// TODO: need to refactor this
 			if key == e.composition[len(e.composition)-1].Rule.Key {
 				// Double typing an effect key undoes it and its effects.
 				e.composition = UndoesTransformations(e.composition, e.getApplicableRules(key))
@@ -269,6 +274,7 @@ func (e *BambooEngine) ProcessChar(key rune) {
 			}
 		}
 	}
+	// TODO: need to refactor this
 	if e.flags&EautoCorrect != 0 && (e.isSuperKey(key) || (!e.isToneKey(key) && hasSuperWord(e.composition))) {
 		if missingRule, found := FindMissingRuleForUo(e.composition, e.isSuperKey(key)); found {
 			var targets = FindMarkTargets(e.composition, missingRule)

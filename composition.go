@@ -211,7 +211,7 @@ func isSpellingCorrect(composition []*Transformation, mode Mode) bool {
 	return false
 }
 
-func isSpellingSensible(composition []*Transformation, mode Mode) bool {
+func isLikelySpellingCorrect(composition []*Transformation, mode Mode) bool {
 	if len(composition) <= 1 {
 		return true
 	}
@@ -279,6 +279,17 @@ func UndoesTransformations(composition []*Transformation, applicableRules []Rule
 				}
 				break
 			}
+		}
+	}
+	return result
+}
+
+func freeComposition(composition []*Transformation) []*Transformation {
+	var result []*Transformation
+	result = append(result, composition...)
+	for i, trans := range composition {
+		if trans.IsDeleted {
+			result = RemoveTransIdx(result, i)
 		}
 	}
 	return result
