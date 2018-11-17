@@ -202,7 +202,12 @@ func isSpellingCorrect(composition []*Transformation, mode Mode) bool {
 	}
 	if mode&NoTone != 0 {
 		str := Flatten(composition, NoTone|LowerCase)
-		if len([]rune(str)) <= 1 {
+		var chars = []rune(str)
+		if len(chars) <= 1 {
+			return true
+		}
+		// we want to allow dd even in non-vn sequence, because dd is used a lot in abbreviation
+		if strings.ContainsRune(str, 'đ') {
 			return true
 		}
 		ok, _ := LookupDictionary(str)
@@ -218,6 +223,10 @@ func isLikelySpellingCorrect(composition []*Transformation, mode Mode) bool {
 	if mode&NoTone != 0 {
 		str := Flatten(composition, NoTone|LowerCase)
 		if len([]rune(str)) <= 1 {
+			return true
+		}
+		// we want to allow dd even in non-vn sequence, because dd is used a lot in abbreviation
+		if strings.ContainsRune(str, 'đ') {
 			return true
 		}
 		return LookupVnlDictionary(str)

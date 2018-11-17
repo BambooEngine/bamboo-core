@@ -51,7 +51,9 @@ const (
 	EautoNonVnRestore
 	EautoCorrect
 	EfastCommitting
-	EstdFlags = EfreeToneMarking | EstdToneStyle | EautoCorrect | EspellCheckEnabled
+	EconsonantBreakEnabled
+	EddSpellcheckDisabled
+	EstdFlags = EfreeToneMarking | EstdToneStyle | EautoCorrect | EspellCheckEnabled | EddSpellcheckDisabled
 )
 
 type Transformation struct {
@@ -190,7 +192,7 @@ func (e *BambooEngine) createCompositionForRule(rule Rule, isUpperKey bool) []*T
 	var trans = new(Transformation)
 	trans.Rule = rule
 	trans.IsUpperCase = isUpperKey
-	if e.flags&EspellCheckEnabled!=0 && !isLikelySpellingCorrect(e.composition, NoTone|LowerCase) {
+	if e.flags&EspellCheckEnabled != 0 && !isLikelySpellingCorrect(e.composition, NoTone|LowerCase) {
 	} else {
 		if target, applicableRule := e.findTargetForKey(rule.Key); target != nil {
 			trans.Rule = applicableRule
@@ -274,7 +276,7 @@ func (e *BambooEngine) ProcessChar(key rune) {
 			}
 		}
 	}
-	// TODO: need to refactor this
+	// TODO: need to refactor
 	if e.flags&EautoCorrect != 0 && (e.isSuperKey(key) || (!e.isToneKey(key) && hasSuperWord(e.composition))) {
 		if missingRule, found := FindMissingRuleForUo(e.composition, e.isSuperKey(key)); found {
 			var targets = FindMarkTargets(e.composition, missingRule)
