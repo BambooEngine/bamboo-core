@@ -110,3 +110,34 @@ func shouldRefreshLastToneTarget(transformations []*Transformation) bool {
 	}
 	return len(transformations) > 0 && transformations[len(transformations)-1].Rule.EffectType == Appending
 }
+
+func refreshLastToneTarget(transformations []*Transformation) []*Transformation {
+	var composition []*Transformation
+	composition = append(composition, transformations...)
+	// Refresh the tone position of the rightmost vowelSeq
+	var rightmostVowels = getRightMostVowels(composition)
+	if len(rightmostVowels) <= 0 {
+		return composition
+	}
+	var pos = 0
+	var rightmostFC = getRightMostFirstConsonant(composition)
+	if len(rightmostFC) > 0 {
+		pos = findTransPos(composition, rightmostFC[0])
+	}
+	for i := len(composition) - 1; i >= 0; i-- {
+		if i <= pos {
+			break
+		}
+		trans := composition[i]
+		if trans.Rule.EffectType == ToneTransformation {
+			var newTarget = findToneTarget(composition, true)
+			if newTarget != nil {
+				trans.Target = newTarget
+				composition = removeTrans(composition, trans)
+				composition = append(composition, trans)
+				break
+			}
+		}
+	}
+	return composition
+}

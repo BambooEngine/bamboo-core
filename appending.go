@@ -43,7 +43,7 @@ func findAppendingRule(rules []Rule, key rune) Rule {
 }
 
 func findLastAppendingTrans(composition []*Transformation) *Transformation {
-	for i:=len(composition)-1;i>=0;i-- {
+	for i := len(composition) - 1; i >= 0; i-- {
 		var trans = composition[i]
 		if trans.Rule.EffectType == Appending {
 			return trans
@@ -72,8 +72,8 @@ func createAppendingTrans(key rune) *Transformation {
 	return &Transformation{
 		IsUpperCase: unicode.IsUpper(key),
 		Rule: Rule{
-			Key: unicode.ToLower(key),
-			EffectOn: unicode.ToLower(key),
+			Key:        unicode.ToLower(key),
+			EffectOn:   unicode.ToLower(key),
 			EffectType: Appending,
 		},
 	}

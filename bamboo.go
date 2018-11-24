@@ -48,7 +48,7 @@ const (
 	EstdToneStyle
 	EautoCorrectEnabled
 	EddFreeStyle
-	EstdFlags = EfreeToneMarking | EstdToneStyle | EautoCorrectEnabled| EddFreeStyle
+	EstdFlags = EfreeToneMarking | EstdToneStyle | EautoCorrectEnabled | EddFreeStyle
 )
 
 type Transformation struct {
@@ -231,26 +231,6 @@ func (e *BambooEngine) GetProcessedString(mode Mode) string {
 
 /***** BEGIN SIDE-EFFECT METHODS ******/
 
-func (e *BambooEngine) refreshLastToneTarget() {
-	// Refresh the tone position of the rightmost vowelSeq
-	var rightmostVowels = getRightMostVowels(e.composition)
-	if len(rightmostVowels) <= 0 {
-		return
-	}
-	var rightmostVowelPos = findTransPos(e.composition, rightmostVowels[0])
-	for i := len(e.composition) - 1; i >= 0; i-- {
-		trans := e.composition[i]
-		if trans.Rule.EffectType == ToneTransformation {
-			var newTarget = findToneTarget(e.composition, e.flags&EstdToneStyle != 0)
-			var tonePos = findTransPos(e.composition, trans)
-			if tonePos > rightmostVowelPos {
-				trans.Target = newTarget
-				break
-			}
-		}
-	}
-}
-
 func (e *BambooEngine) ProcessChar(key rune, mode Mode) {
 	if mode&EnglishMode != 0 {
 		e.composition = append(e.composition, createAppendingTrans(key))
@@ -298,7 +278,7 @@ func (e *BambooEngine) ProcessChar(key rune, mode Mode) {
 	* this state: chuyenre -> chuyển
 	**/
 	if e.flags&EstdToneStyle != 0 && shouldRefreshLastToneTarget(e.composition) {
-		e.refreshLastToneTarget()
+		e.composition = refreshLastToneTarget(e.composition)
 	}
 }
 

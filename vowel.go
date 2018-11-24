@@ -32,7 +32,6 @@ func FindVowelPosition(chr rune) int {
 	return -1
 }
 
-
 func isVowelSound(str string) bool {
 	for _, line := range vowelSeq {
 		for _, vowel := range strings.Split(line, " ") {
