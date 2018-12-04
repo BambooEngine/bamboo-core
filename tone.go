@@ -114,30 +114,14 @@ func shouldRefreshLastToneTarget(transformations []*Transformation) bool {
 func refreshLastToneTarget(transformations []*Transformation) []*Transformation {
 	var composition []*Transformation
 	composition = append(composition, transformations...)
-	// Refresh the tone position of the rightmost vowelSeq
 	var rightmostVowels = getRightMostVowels(composition)
-	if len(rightmostVowels) <= 0 {
+	var lastToneTrans = getLastToneTransformation(composition)
+	if len(rightmostVowels) == 0 || lastToneTrans == nil {
 		return composition
 	}
-	var pos = 0
-	var rightmostFC = getRightMostFirstConsonant(composition)
-	if len(rightmostFC) > 0 {
-		pos = findTransPos(composition, rightmostFC[0])
-	}
-	for i := len(composition) - 1; i >= 0; i-- {
-		if i <= pos {
-			break
-		}
-		trans := composition[i]
-		if trans.Rule.EffectType == ToneTransformation {
-			var newTarget = findToneTarget(composition, true)
-			if newTarget != nil {
-				trans.Target = newTarget
-				composition = removeTrans(composition, trans)
-				composition = append(composition, trans)
-				break
-			}
-		}
+	var newToneTarget = findToneTarget(composition, true)
+	if lastToneTrans.Target != newToneTarget {
+		lastToneTrans.Target = newToneTarget
 	}
 	return composition
 }

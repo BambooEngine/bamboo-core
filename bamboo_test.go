@@ -258,3 +258,27 @@ func TestProcessQusi(t *testing.T) {
 		t.Errorf("TestProcessDDSeq, got [%v] expected [quí]", ng.GetProcessedString(VietnameseMode))
 	}
 }
+
+func TestProcessKimso(t *testing.T) {
+	ng := NewEngine("Telex 2", EstdFlags)
+	ng.ProcessString("kimso", VietnameseMode)
+	if ng.GetProcessedString(VietnameseMode) != "kímo" {
+		t.Errorf("TestProcessKimso, got [%v] expected [kímo]", ng.GetProcessedString(VietnameseMode))
+	}
+}
+
+func TestProcessTo(t *testing.T) {
+	ng := NewEngine("Telex 2", EstdFlags)
+	ng.ProcessString("to", VietnameseMode)
+	if ng.IsSpellingCorrect(VietnameseMode) != true {
+		t.Errorf("TestProcessKimso, got [%v] expected [true]", ng.IsSpellingCorrect(VietnameseMode))
+	}
+}
+
+func TestProcessToorr(t *testing.T) {
+	ng := NewEngine("Telex 2", EstdFlags)
+	ng.ProcessString("toorr", VietnameseMode)
+	if ng.GetProcessedString(VietnameseMode) != "tôr" {
+		t.Errorf("TestProcessToorr, got [%v] expected [tôr]", ng.GetProcessedString(VietnameseMode))
+	}
+}

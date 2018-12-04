@@ -13,7 +13,7 @@ var vowelMap = map[string]rune{
 	"ao": 'a',
 }
 
-func isVowel(chr rune) bool {
+func IsVowel(chr rune) bool {
 	isVowel := false
 	for _, v := range vowels {
 		if v == chr {
@@ -21,6 +21,15 @@ func isVowel(chr rune) bool {
 		}
 	}
 	return isVowel
+}
+
+func HasVowel(seq []rune) bool {
+	for _, s := range seq {
+		if IsVowel(s) {
+			return true
+		}
+	}
+	return false
 }
 
 func FindVowelPosition(chr rune) int {
@@ -43,10 +52,10 @@ func isVowelSound(str string) bool {
 	return false
 }
 
-func isVowelString(str string) bool {
+func IsVowelString(str string) bool {
 	var isVowels = true
 	for _, chr := range []rune(str) {
-		if !isVowel(chr) {
+		if !IsVowel(chr) {
 			isVowels = false
 		}
 	}

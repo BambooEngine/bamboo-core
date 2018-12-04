@@ -171,7 +171,7 @@ func (e *BambooEngine) findTargetForKey(key rune) (*Transformation, Rule) {
 						target = nil
 					}
 				}
-			} else if lastAppending != nil && isVowel(lastAppending.Rule.EffectOn) {
+			} else if lastAppending != nil && IsVowel(lastAppending.Rule.EffectOn) {
 				target = lastAppending
 			}
 		}

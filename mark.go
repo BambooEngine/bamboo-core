@@ -34,6 +34,25 @@ var marksMaps = map[rune]string{
 	'đ': "d___đ",
 }
 
+func FindMarkPosition(chr rune) int {
+	if str, found := marksMaps[chr]; found {
+		for pos, v := range []rune(str) {
+			if v == chr {
+				return pos
+			}
+		}
+	}
+	return -1
+}
+
+func FindMarkFromChar(chr rune) (Mark, bool) {
+	var pos = FindMarkPosition(chr)
+	if pos >= 0 {
+		return Mark(pos), true
+	}
+	return 0, false
+}
+
 func RemoveMarkFromChar(chr rune) rune {
 	if str, found := marksMaps[chr]; found {
 		marks := []rune(str)
@@ -93,7 +112,7 @@ func isMarkTargetValid(composition []*Transformation, trans *Transformation) boo
 	if !found {
 		return false
 	}
-	if isVowel(trans.Rule.EffectOn) && targetSound != VowelSound {
+	if IsVowel(trans.Rule.EffectOn) && targetSound != VowelSound {
 		return false
 	}
 	if targetSound == VowelSound && !isSpellingCorrect(getRightMostVowelWithMarks(append(composition, trans)), NoTone) {

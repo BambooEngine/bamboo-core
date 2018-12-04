@@ -119,7 +119,7 @@ func ParseSoundsFromTonelessWord(word string) []Sound {
 		return sounds
 	}
 	for _, c := range []rune(word) {
-		if isVowel(c) {
+		if IsVowel(c) {
 			sounds = append(sounds, VowelSound)
 		} else if unicode.IsLetter(c) {
 			sounds = append(sounds, FirstConsonantSound)

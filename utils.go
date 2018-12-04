@@ -80,7 +80,7 @@ func SplitStringToWords(str string) []string {
 	for i, r := range seq {
 		word = append(word, r)
 		// todo: need to check if r is a space
-		if i+1 < len(seq)-1 && isVowel(r) && !isVowel(seq[i+1]) {
+		if i+1 < len(seq)-1 && IsVowel(r) && !IsVowel(seq[i+1]) {
 			words = append(words, string(word))
 			word = []rune{}
 		}
@@ -105,7 +105,7 @@ func separateComposition(composition []*Transformation) [][]*Transformation {
 	var appendingTransformations = filterComposition(composition, Appending)
 	for i, trans := range appendingTransformations {
 		seq = append(seq, trans)
-		if i+1 < len(seq)-1 && isVowel(trans.Rule.EffectOn) && !isVowel(seq[i+1].Rule.EffectOn) {
+		if i+1 < len(seq)-1 && IsVowel(trans.Rule.EffectOn) && !IsVowel(seq[i+1].Rule.EffectOn) {
 			result = append(result, seq)
 			seq = []*Transformation{}
 		}
@@ -165,6 +165,13 @@ func copyRunes(r []rune) []rune {
 	copy(t, r)
 
 	return t
+}
+
+func ExtractChar(chr rune) (rune, Mark, Tone) {
+	var tone = FindToneFromChar(chr)
+	var mark, _ = FindMarkFromChar(chr)
+	var base = AddMarkToChar(AddToneToChar(chr, 0), 0)
+	return base, mark, tone
 }
 
 /***** BEGIN SIDE-EFFECT METHODS ******/
