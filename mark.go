@@ -112,6 +112,7 @@ func isMarkTargetValid(composition []*Transformation, trans *Transformation) boo
 	if !found {
 		return false
 	}
+	// the target of trans is a vowel
 	if IsVowel(trans.Rule.EffectOn) && targetSound != VowelSound {
 		return false
 	}
@@ -141,11 +142,6 @@ func getTransformationsTargetTo(composition []*Transformation, trans *Transforma
 	return result
 }
 
-func getRightMostVowelWithMarks(composition []*Transformation) []*Transformation {
-	var vowels = getRightMostVowels(composition)
-	return addMarksToComposition(composition, vowels)
-}
-
 func addMarksToComposition(composition []*Transformation, appendingComps []*Transformation) []*Transformation {
 	var result []*Transformation
 	result = append(result, appendingComps...)
@@ -153,24 +149,4 @@ func addMarksToComposition(composition []*Transformation, appendingComps []*Tran
 		result = append(result, getMarkTransformationsTargetTo(composition, t)...)
 	}
 	return result
-}
-
-func getLastCombinationWithMarks(composition []*Transformation) []*Transformation {
-	return addMarksToComposition(composition, GetLastCombination(composition))
-}
-
-func findMarkTargetIndex(chars []rune) int {
-	if len(chars) != 2 {
-		return 0
-	}
-	if chars[0] == chars[1] {
-		return 0
-	}
-	if key, found := vowelMap[string(chars)]; found {
-		if key == chars[0] {
-			return 0
-		}
-		return 1
-	}
-	return 0
 }

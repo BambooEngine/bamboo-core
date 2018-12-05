@@ -81,10 +81,10 @@ func hasValidTone(composition []*Transformation, tone Tone) bool {
 	if tone == TONE_ACUTE || tone == TONE_DOT {
 		return true
 	}
-	var lastConsonants = Flatten(GetLastSoundGroup(composition, LastConsonantSound), EnglishMode|LowerCase)
+	var lastConsonants = Flatten(getCompositionBySound(composition, LastConsonantSound), EnglishMode|LowerCase)
 
 	// These consonants can only go with ACUTE, DOT accents
-	var dotWithConsonants = []string{"c", "p", "t", "ch"}
+	var dotWithConsonants = []string{"c", "k", "p", "t", "ch"}
 	for _, s := range dotWithConsonants {
 		if s == lastConsonants {
 			return false
@@ -124,4 +124,14 @@ func refreshLastToneTarget(transformations []*Transformation) []*Transformation 
 		lastToneTrans.Target = newToneTarget
 	}
 	return composition
+}
+
+func RemoveToneFromWord(word string) string {
+	var chars = []rune(word)
+	for i, c := range chars {
+		if IsVowel(c) {
+			chars[i] = AddToneToChar(c, 0)
+		}
+	}
+	return string(chars)
 }

@@ -35,10 +35,7 @@ type W struct {
 	N map[rune]*W // Next characters
 }
 
-var rootWordTrie = &W{F: false}
-
 func AddTrie(trie *W, s []rune, down bool) {
-
 	if trie.N == nil {
 		trie.N = map[rune]*W{}
 	}
@@ -73,10 +70,13 @@ func AddTrie(trie *W, s []rune, down bool) {
 	}
 }
 
-func FindWord(trie *W, s []rune) (result uint8) {
+func FindWord(trie *W, s []rune, deepSearch bool) uint8 {
 
 	if len(s) == 0 {
 		if trie.F {
+			if deepSearch && len(trie.N) > 0 {
+				return FindResultMatchPrefix
+			}
 			return FindResultMatchFull
 		}
 		return FindResultMatchPrefix
@@ -85,15 +85,11 @@ func FindWord(trie *W, s []rune) (result uint8) {
 	c := unicode.ToLower(s[0])
 
 	if trie.N[c] != nil {
-		r := FindWord(trie.N[c], s[1:])
+		r := FindWord(trie.N[c], s[1:], deepSearch)
 		if r != FindResultNotMatch {
 			return r
 		}
 	}
 
 	return FindResultNotMatch
-}
-
-func FindRootWord(s []rune) (result uint8) {
-	return FindWord(rootWordTrie, s)
 }

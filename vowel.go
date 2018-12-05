@@ -61,20 +61,3 @@ func IsVowelString(str string) bool {
 	}
 	return isVowels
 }
-
-func findVowelByOrder(vowels []*Transformation, order int) *Transformation {
-	var i = 0
-	for _, trans := range vowels {
-		if trans.Rule.EffectType == Appending {
-			if i == order {
-				return trans
-			}
-			i++
-		}
-	}
-	return nil
-}
-
-func getRightMostVowels(composition []*Transformation) []*Transformation {
-	return GetLastSoundGroup(composition, VowelSound)
-}
