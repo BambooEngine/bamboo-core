@@ -69,6 +69,11 @@ func TestProcessMuoiwqString(t *testing.T) {
 	if ng.GetProcessedString(EnglishMode) != "Muoiwq" {
 		t.Errorf("Process [Muoiwq], got [%s] expected [Muoiwq]", ng.GetProcessedString(EnglishMode))
 	}
+	ng.Reset()
+	ng.ProcessString("mootj", VietnameseMode)
+	if ng.GetProcessedString(VietnameseMode) != "một" {
+		t.Errorf("Process [mootj], got [%s] expected [một]", ng.GetProcessedString(VietnameseMode))
+	}
 }
 
 func TestProcessThuowString(t *testing.T) {
@@ -92,6 +97,15 @@ func TestProcessUpperString(t *testing.T) {
 	ng.RemoveLastChar()
 	if ng.GetProcessedString(VietnameseMode) != "VIỆ" {
 		t.Errorf("Process remove last char of upper string, got [%s] expected [VIỆ]", ng.GetProcessedString(VietnameseMode))
+	}
+	ng.ProcessChar('Q', VietnameseMode)
+	if ng.GetProcessedString(EnglishMode) != "VIEEJQ" {
+		t.Errorf("Process remove last char of upper string, got [%s] expected [VIEEJQ]", ng.GetProcessedString(EnglishMode))
+	}
+	ng.Reset()
+	ng.ProcessString("IB", EnglishMode)
+	if ng.GetProcessedString(EnglishMode) != "IB" {
+		t.Errorf("Process remove last char of upper string, got [%s] expected [IB]", ng.GetProcessedString(EnglishMode))
 	}
 }
 
@@ -298,9 +312,18 @@ func TestProcessTnoss(t *testing.T) {
 
 //ềng
 func TestProcessEenghf(t *testing.T) {
-	ng := NewEngine("Telex 2", EstdFlags, []string{"ềngh"})
+	ng := NewEngine("Telex 2", EstdFlags, map[string]bool{"ềngh": true})
 	ng.ProcessString("eenghf", VietnameseMode)
 	if ng.GetProcessedString(VietnameseMode) != "ềngh" {
 		t.Errorf("TestProcessToorr, got [%v] expected [ềnhg]", ng.GetProcessedString(VietnameseMode))
+	}
+}
+
+//HIEEUR
+func TestProcessHIEEUR(t *testing.T) {
+	ng := NewEngine("Telex 2", EstdFlags, nil)
+	ng.ProcessString("HIEEUR", VietnameseMode)
+	if ng.GetProcessedString(VietnameseMode) != "HIỂU" {
+		t.Errorf("TestProcessToorr, got [%v] expected [HIỂU]", ng.GetProcessedString(VietnameseMode))
 	}
 }

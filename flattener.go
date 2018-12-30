@@ -20,6 +20,7 @@
 package bamboo
 
 import (
+	"log"
 	"strings"
 	"unicode"
 )
@@ -41,11 +42,34 @@ func Flatten(composition []*Transformation, mode Mode) string {
 
 func (f *BambooFlattener) Flatten(composition []*Transformation, mode Mode) string {
 	canvas := f.GetCanvas(composition, mode)
-	for _, trans := range composition {
-		if trans.Rule.EffectType == Appending {
-			if trans.IsUpperCase {
-				canvas[trans.Dest] = unicode.ToUpper(canvas[trans.Dest])
+	if mode&LowerCase != 0 {
+		return string(canvas)
+	}
+	return f.toUpper(composition, canvas, mode)
+}
+
+func (f *BambooFlattener) toUpper(composition []*Transformation, canvas []rune, mode Mode) string {
+	if mode&VietnameseMode != 0 {
+		for _, trans := range composition {
+			if trans.Rule.EffectType == Appending {
+				if int(trans.Dest) >= len(canvas) {
+					log.Println("Something is wrong with dest of trans")
+					continue
+				}
+				if trans.IsUpperCase {
+					canvas[trans.Dest] = unicode.ToUpper(canvas[trans.Dest])
+				}
 			}
+		}
+		return string(canvas)
+	}
+	for _, trans := range composition {
+		if int(trans.Dest) >= len(canvas) {
+			log.Println("Something is wrong with dest of trans")
+			continue
+		}
+		if trans.IsUpperCase {
+			canvas[trans.Dest] = unicode.ToUpper(canvas[trans.Dest])
 		}
 	}
 	return string(canvas)
@@ -62,11 +86,13 @@ func (f *BambooFlattener) GetCanvas(composition []*Transformation, mode Mode) []
 		canvas[index] = callback(canvas[index], trans.Rule.Effect)
 	}
 	for _, trans := range composition {
+		trans.Dest = 0
 		if trans.IsDeleted {
 			continue
 		}
 		if mode&EnglishMode != 0 {
 			if trans.Rule.Key > 0 {
+				trans.Dest = uint(len(canvas))
 				canvas = append(canvas, trans.Rule.Key)
 			}
 			// ignore virtual key
