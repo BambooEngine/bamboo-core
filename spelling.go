@@ -1,3 +1,22 @@
+/*
+ * Bamboo - A Vietnamese Input method editor
+ * Copyright (C) Luong Thanh Lam <ltlam93@gmail.com>
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * This software is licensed under the MIT license. For more information,
+ * see <https://github.com/BambooEngine/bamboo-core/blob/master/LISENCE>.
+ */
 package bamboo
 
 import (
@@ -138,22 +157,38 @@ func generateCVC() []string {
 	return ret
 }
 
-func GetLastCombination(composition []*Transformation) []*Transformation {
+func getLastWord(composition []*Transformation) []*Transformation {
+	for i := len(composition) - 1; i >= 0; i-- {
+		var t = composition[i]
+		if t.Rule.EffectType == Appending && !unicode.IsLetter(t.Rule.EffectOn) {
+			if i == len(composition)-1 {
+				return nil
+			}
+			return composition[i+1:]
+		}
+	}
+	return composition
+}
+
+func getLastCombination(composition []*Transformation) []*Transformation {
 	var ret []*Transformation
 	if len(composition) <= 1 {
 		return composition
 	}
 	for i, trans := range composition {
 		ret = append(ret, trans)
-		str := Flatten(ret, VietnameseMode|NoTone)
+		if i < len(composition)-1 && composition[i+1].Rule.EffectType != Appending {
+			continue
+		}
+		str := Flatten(ret, VietnameseMode|NoTone|LowerCase)
 		if str == "" {
 			continue
 		}
 		if FindWord(spellingTrie, []rune(str), false) == FindResultNotMatch {
 			if i == 0 {
-				return GetLastCombination(composition[1:])
+				return getLastCombination(composition[1:])
 			}
-			return GetLastCombination(composition[i:])
+			return getLastCombination(composition[i:])
 		}
 	}
 	return ret
