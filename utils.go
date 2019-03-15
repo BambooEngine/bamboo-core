@@ -38,7 +38,7 @@ func HasVowel(seq []rune) bool {
 		}
 	}
 	return false
-}s ai maf keer no
+}
 
 func FindVowelPosition(chr rune) int {
 	for pos, v := range Vowels {
