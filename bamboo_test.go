@@ -34,8 +34,8 @@ func TestProcessString(t *testing.T) {
 func TestProcessDDString(t *testing.T) {
 	ng := newStdEngine()
 	ng.ProcessString("dd", VietnameseMode)
-	if ng.IsSpellingCorrect(NoTone) != true {
-		t.Errorf("IsSpellingCorrect [dd], got [%v] expected [true]", ng.IsSpellingCorrect(NoTone))
+	if ng.GetSpellingMatchResult(ToneLess, false) == FindResultNotMatch {
+		t.Errorf("IsSpellingCorrect [dd], got [%v] expected [true]", ng.GetSpellingMatchResult(ToneLess, false) == FindResultNotMatch)
 	}
 	ng.Reset()
 	ng.ProcessString("ddafi", VietnameseMode)
@@ -65,7 +65,7 @@ func TestProcessThuowString(t *testing.T) {
 	}
 	ng.RemoveLastChar()
 	if ng.GetProcessedString(VietnameseMode, false) != "Thu" {
-		t.Errorf("Process [Thuow], got [%s] expected [%s]", ng.GetProcessedString(VietnameseMode, false), "Thu")
+		t.Errorf("Process [Thuow] and remove last char, got [%s] expected [%s]", ng.GetProcessedString(VietnameseMode, false), "Thu")
 	}
 }
 
@@ -79,7 +79,7 @@ func TestProcessUpperString(t *testing.T) {
 	if ng.GetProcessedString(VietnameseMode, false) != "VIỆ" {
 		t.Errorf("Process remove last char of upper string, got [%s] expected [VIỆ]", ng.GetProcessedString(VietnameseMode, false))
 	}
-	ng.ProcessChar('Q', VietnameseMode)
+	ng.ProcessKey('Q', VietnameseMode)
 	if ng.GetProcessedString(EnglishMode, false) != "VIEEJQ" {
 		t.Errorf("Process remove last char of upper string, got [%s] expected [VIEEJQ]", ng.GetProcessedString(EnglishMode, false))
 	}
@@ -106,8 +106,8 @@ func TestSpellingCheck(t *testing.T) {
 func TestProcessDD(t *testing.T) {
 	ng := newStdEngine()
 	ng.ProcessString("dd", VietnameseMode)
-	if ng.IsSpellingCorrect(NoTone) != true {
-		t.Errorf("Check spelling for [dd], got [%v] expected [true]", ng.IsSpellingCorrect(NoTone))
+	if ng.GetSpellingMatchResult(ToneLess, false) == FindResultNotMatch {
+		t.Errorf("Check spelling for [dd], got [%v] expected [true]", ng.GetSpellingMatchResult(ToneLess, false) == FindResultNotMatch)
 	}
 	if ng.GetProcessedString(VietnameseMode, false) != "đ" {
 		t.Errorf("Process [dd], got [%s] expected [đ]", ng.GetProcessedString(EnglishMode, false))
@@ -172,8 +172,8 @@ func TestProcessAlooString(t *testing.T) {
 func TestSpellingCheckForGiw(t *testing.T) {
 	ng := newStdEngine()
 	ng.ProcessString("giw", VietnameseMode)
-	if ng.IsSpellingCorrect(NoTone|NoMark) != true {
-		t.Errorf("TestSpellingCheckForGiw, got [%v] expected [%v]", ng.IsSpellingCorrect(NoTone|NoMark), true)
+	if ng.GetSpellingMatchResult(ToneLess, false) == FindResultNotMatch {
+		t.Errorf("TestSpellingCheckForGiw, got [%v] expected [%v]", ng.GetSpellingMatchResult(ToneLess, false) == FindResultNotMatch, true)
 	}
 }
 
@@ -236,7 +236,7 @@ func TestProcessRefresh2(t *testing.T) {
 	ng := newStdEngine()
 	ng.ProcessString("reff", VietnameseMode)
 	ng.RemoveLastChar()
-	ng.ProcessChar('f', VietnameseMode)
+	ng.ProcessKey('f', VietnameseMode)
 	if ng.GetProcessedString(VietnameseMode, false) != "rè" {
 		t.Errorf("TestProcessDuwoi, got [%v] expected [rè]", ng.GetProcessedString(VietnameseMode, false))
 	}
@@ -269,8 +269,8 @@ func TestProcessKimso(t *testing.T) {
 func TestProcessTo(t *testing.T) {
 	ng := newStdEngine()
 	ng.ProcessString("to", VietnameseMode)
-	if ng.IsSpellingCorrect(VietnameseMode|NoTone) != true {
-		t.Errorf("TestProcessTo, got [%v] expected [true]", ng.IsSpellingCorrect(VietnameseMode))
+	if ng.GetSpellingMatchResult(ToneLess, false) == FindResultNotMatch {
+		t.Errorf("TestProcessTo, got [%v] expected [true]", ng.GetSpellingMatchResult(ToneLess, false) == FindResultNotMatch)
 	}
 }
 
@@ -304,8 +304,8 @@ func TestProcessEenghf(t *testing.T) {
 func TestProcessHIEEUR(t *testing.T) {
 	ng := NewEngine("Telex 2", EstdFlags, nil)
 	ng.ProcessString("tooi oo HIEEUR", VietnameseMode)
-	if ng.GetProcessedString(VietnameseMode, false) != "tôi ô HIỂU" {
-		t.Errorf("TestProcessToorr, got [%v] expected [tôi ô HIỂU]", ng.GetProcessedString(VietnameseMode, false))
+	if ng.GetProcessedString(VietnameseMode, false) != "HIỂU" {
+		t.Errorf("TestProcessToorr, got [%v] expected [HIỂU]", ng.GetProcessedString(VietnameseMode, false))
 	}
 	if ng.GetProcessedString(VietnameseMode, true) != "HIỂU" {
 		t.Errorf("TestProcessToorr, got [%v] expected [HIỂU]", ng.GetProcessedString(VietnameseMode, true))
@@ -327,5 +327,17 @@ func TestProcessTOs(t *testing.T) {
 	ng.ProcessString("{s", VietnameseMode)
 	if ng.GetProcessedString(VietnameseMode, false) != "Ớ" {
 		t.Errorf("TestProcessToorr, got [%v] expected [Ớ]", ng.GetProcessedString(VietnameseMode, false))
+	}
+}
+
+//T{s
+func TestProcessTo5(t *testing.T) {
+	ng := NewEngine("VNI", EstdFlags, nil)
+	ng.ProcessString("o55", VietnameseMode)
+	if ng.GetProcessedString(VietnameseMode, false) != "o5" {
+		t.Errorf("TestProcessToorr, got [%v] expected [o5]", ng.GetProcessedString(VietnameseMode, false))
+	}
+	if ng.GetProcessedString(VietnameseMode, true) != "" {
+		t.Errorf("TestProcessToorr, got [%v] expected []", ng.GetProcessedString(VietnameseMode, true))
 	}
 }
