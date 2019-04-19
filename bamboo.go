@@ -230,8 +230,8 @@ func (e *BambooEngine) ProcessKey(key rune, mode Mode) {
 	* Sometimes, a tone's position in a previous state must be changed to fit the new state
 	*
 	* e.g.
-	* prev state: chuyenr -> chuỷen
-	* this state: chuyenre -> chuyển
+	* prev state: chuyr -> chuỷ
+	* this state: chuyrene -> chuyển
 	**/
 	if e.flags&EfreeToneMarking != 0 {
 		lastSyllable = refreshLastToneTarget(lastSyllable, e.flags&EstdToneStyle != 0)
