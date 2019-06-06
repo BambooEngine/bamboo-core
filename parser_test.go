@@ -61,8 +61,9 @@ func TestParseTonelessRules(t *testing.T) {
 		})
 	}
 	rules = ParseTonelessRules('w', "UOA_ƯƠĂ")
-	if len(rules) != 3 {
-		t.Errorf("Test the length of parsing mark rule. Got %d, expected %d", len(rules), 3)
+	t.Log("RULES=", rules)
+	if len(rules) != 5 {
+		t.Errorf("Test the length of parsing mark rule. Got %d, expected %d", len(rules), 5)
 	}
 	if rules[0].EffectType != MarkTransformation || rules[0].GetMark() != MARK_HORN || rules[0].EffectOn != 'u' {
 		t.Errorf("Test parsing mark Rule. Got %v, expected %v", rules[0], Rule{
@@ -80,8 +81,8 @@ func TestParseTonelessRules(t *testing.T) {
 			EffectOn:   'o',
 		})
 	}
-	if rules[2].EffectType != MarkTransformation || rules[2].GetMark() != MARK_BREVE || rules[2].EffectOn != 'a' {
-		t.Errorf("Test parsing mark Rule. Got %v, expected %v", rules[2], Rule{
+	if rules[3].EffectType != MarkTransformation || rules[3].GetMark() != MARK_BREVE || rules[3].EffectOn != 'a' {
+		t.Errorf("Test parsing mark Rule. Got %v, expected %v", rules[3], Rule{
 			Key:        'w',
 			EffectType: MarkTransformation,
 			Effect:     uint8(MARK_BREVE),
@@ -89,19 +90,20 @@ func TestParseTonelessRules(t *testing.T) {
 		})
 	}
 	rules = ParseTonelessRules('w', "UOA_ƯƠĂ__Ư")
-	if len(rules) != 4 {
-		t.Errorf("Test the length of parsing mark rule. Got %d, expected %d", len(rules), 4)
+	if len(rules) != 6 {
+		t.Errorf("Test the length of parsing mark rule. Got %d, expected %d", len(rules), 6)
 	} else {
-		if rules[2].EffectType != MarkTransformation || rules[2].GetMark() != MARK_BREVE || rules[2].EffectOn != 'a' {
-			t.Errorf("Test parsing mark Rule. Got %v, expected %v", rules[2], Rule{
+		t.Log("RULES[UOA_ƯƠĂ__Ư]=", rules)
+		if rules[3].EffectType != MarkTransformation || rules[3].GetMark() != MARK_BREVE || rules[3].EffectOn != 'a' {
+			t.Errorf("Test parsing mark Rule. Got %v, expected %v", rules[3], Rule{
 				Key:        'w',
 				EffectType: MarkTransformation,
 				Effect:     uint8(MARK_BREVE),
 				EffectOn:   'a',
 			})
 		}
-		if rules[3].EffectType != Appending || rules[3].EffectOn != 'ư' {
-			t.Errorf("Test parsing mark Rule. Got %v, expected %v", rules[3], Rule{
+		if rules[5].EffectType != Appending || rules[5].EffectOn != 'ư' {
+			t.Errorf("Test parsing mark Rule. Got %v, expected %v", rules[5], Rule{
 				Key:        'w',
 				EffectType: Appending,
 			})

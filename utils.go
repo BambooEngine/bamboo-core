@@ -83,6 +83,18 @@ var marksMaps = map[rune]string{
 	'đ': "d___đ",
 }
 
+func getMarkFamily(chr rune) []rune {
+	var result []rune
+	if s, found := marksMaps[chr]; found {
+		for _, c := range []rune(s) {
+			if c != '_' {
+				result = append(result, c)
+			}
+		}
+	}
+	return result
+}
+
 func FindMarkPosition(chr rune) int {
 	if str, found := marksMaps[chr]; found {
 		for pos, v := range []rune(str) {

@@ -68,6 +68,7 @@ type Rule struct {
 	Effect        uint8 // (Tone, Mark)
 	EffectType    EffectType
 	EffectOn      rune
+	Result        rune
 	AppendedRules []Rule
 }
 
@@ -155,13 +156,7 @@ func ParseTonelessRules(key rune, line string) []Rule {
 			if !found {
 				continue
 			}
-			var rule Rule
-			rule.Key = key
-			rule.EffectType = MarkTransformation
-			rule.EffectOn = effectiveOn
-			rule.Effect = uint8(effect)
-
-			rules = append(rules, rule)
+			rules = append(rules, ParseToneLessRule(key, effectiveOn, results[i], effect)...)
 		}
 		if rule, ok := getAppendingRule(key, parts[3]); ok {
 			rules = append(rules, rule)
@@ -169,6 +164,37 @@ func ParseTonelessRules(key rune, line string) []Rule {
 
 	} else if rule, ok := getAppendingRule(key, line); ok {
 		rules = append(rules, rule)
+	}
+	return rules
+}
+
+func ParseToneLessRule(key, effectiveOn, result rune, effect Mark) []Rule {
+	var rules []Rule
+	for _, mk := range getMarkFamily(effectiveOn) {
+		if mk == result {
+			continue
+			var rule Rule
+			rule.Key = key
+			rule.EffectType = MarkTransformation
+			rule.EffectOn = mk
+			rule.Effect = uint8(MARK_NONE)
+			rule.Result = key
+			rule.AppendedRules = append(rule.AppendedRules, Rule{
+				Key:        0,
+				EffectType: Appending,
+				EffectOn:   key,
+				Result:     key,
+			})
+			rules = append(rules, rule)
+		} else {
+			var rule Rule
+			rule.Key = key
+			rule.EffectType = MarkTransformation
+			rule.EffectOn = mk
+			rule.Effect = uint8(effect)
+			rule.Result = result
+			rules = append(rules, rule)
+		}
 	}
 	return rules
 }
@@ -183,12 +209,14 @@ func getAppendingRule(key rune, value string) (Rule, bool) {
 		rule.Key = key
 		rule.EffectType = Appending
 		rule.EffectOn = chars[0]
+		rule.Result = chars[0]
 		if len(chars) > 1 {
 			for _, chr := range chars[1:] {
 				rule.AppendedRules = append(rule.AppendedRules, Rule{
 					Key:        key,
 					EffectType: Appending,
 					EffectOn:   chr,
+					Result:     chr,
 				})
 			}
 		}
