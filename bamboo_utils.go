@@ -396,7 +396,7 @@ func findTargetFromKey(composition []*Transformation, applicableRules []Rule, fl
 			if flags&EfreeToneMarking != 0 {
 				if hasValidTone(composition, Tone(applicableRule.Effect)) {
 					target = findToneTarget(composition, flags&EstdToneStyle != 0)
-					if !isFree(composition, target, ToneTransformation) {
+					if !isFree(composition, target, ToneTransformation) || Tone(applicableRule.Effect) == TONE_NONE {
 						target = nil
 					}
 				}
@@ -436,6 +436,24 @@ func isCompositionUpper(composition []*Transformation) bool {
 	return true
 }
 
+func isEffectedKey(composition []*Transformation, key rune) bool {
+	for _, trans := range composition {
+		if trans.Rule.Key == key && trans.Target != nil {
+			return true
+		}
+	}
+	return false
+}
+
+func isExistedKey(composition []*Transformation, key rune) bool {
+	for _, trans := range composition {
+		if trans.Rule.Key == key {
+			return true
+		}
+	}
+	return false
+}
+
 /***** BEGIN SIDE-EFFECT METHODS ******/
 
 func removeTrans(composition []*Transformation, trans *Transformation) []*Transformation {
@@ -454,9 +472,9 @@ func removeTransIdx(composition []*Transformation, idx int) []*Transformation {
 	return composition
 }
 
-func undoesTransformations(composition []*Transformation, applicableRules []Rule) []*Transformation {
-	var result []*Transformation
-	result = append(result, composition...)
+func undoesTransformations(composition []*Transformation, applicableRules []Rule) ([]*Transformation, bool) {
+	var result = []*Transformation(composition)
+	var needToOverride bool
 	for i, trans := range result {
 		for _, applicableRule := range applicableRules {
 			var key = applicableRule.Key
@@ -489,6 +507,10 @@ func undoesTransformations(composition []*Transformation, applicableRules []Rule
 				} else {
 					// make this tone overridable
 					trans.Target = nil
+					needToOverride = true
+					if Tone(applicableRule.Effect) == TONE_NONE {
+						needToOverride = false
+					}
 				}
 				break
 			case MarkTransformation:
@@ -505,12 +527,13 @@ func undoesTransformations(composition []*Transformation, applicableRules []Rule
 					// make this mark overridable
 					trans.IsDeleted = true
 					trans.Target = nil
+					needToOverride = true
 				}
 				break
 			}
 		}
 	}
-	return result
+	return result, needToOverride
 }
 
 func freeComposition(composition []*Transformation) []*Transformation {

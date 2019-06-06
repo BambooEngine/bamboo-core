@@ -208,46 +208,20 @@ func (e *BambooEngine) ProcessKey(key rune, mode Mode) {
 		lastSyllable = freeComposition(lastSyllable)
 
 		if target, _ := e.findTargetFromKey(lastSyllable, lowerKey); target == nil {
-			if lowerKey == lastSyllable[len(lastSyllable)-1].Rule.Key {
-				// Double typing an effect key undoes it and its effects.
-				lastSyllable = undoesTransformations(lastSyllable, e.getApplicableRules(lowerKey))
+			lastSyllable, needToOverride := undoesTransformations(lastSyllable, e.getApplicableRules(lowerKey))
+			lastSyllable = freeComposition(lastSyllable)
+			if !needToOverride {
 				lastSyllable = append(lastSyllable, createAppendingTrans(lowerKey, isUpperCase))
-
+				lastSyllable = e.refreshLastToneTarget(e.applyUowShortcut(lastSyllable))
 				e.composition = append(previousTransformations, lastSyllable...)
 				return
-			} else {
-				// Or an effect key may override other effect keys
-				lastSyllable = undoesTransformations(lastSyllable, e.getApplicableRules(lowerKey))
 			}
 		}
 	}
 
 	// Just process the key stroke on the last syllable
 	lastSyllable = append(lastSyllable, e.getTransformations(lastSyllable, lowerKey, isUpperCase)...)
-
-	// Implement the uow typing shortcut by creating a virtual
-	// Mark.HORN rule that targets 'u' or 'o'.
-	if e.flags&EautoCorrectEnabled != 0 && len(e.inputMethod.SuperKeys) > 0 && isTransformationForUoMissed(lastSyllable) {
-		if target, missingRule := e.findTargetFromKey(lastSyllable, e.inputMethod.SuperKeys[0]); target != nil {
-			missingRule.Key = rune(0) // virtual rule should not appear in the raw string
-			virtualTrans := &Transformation{
-				Rule:   missingRule,
-				Target: target,
-			}
-			lastSyllable = append(lastSyllable, virtualTrans)
-		}
-	}
-	/**
-	* Sometimes, a tone's position in a previous state must be changed to fit the new state
-	*
-	* e.g.
-	* prev state: chuyr -> chuỷ
-	* this state: chuyrene -> chuyển
-	**/
-	if e.flags&EfreeToneMarking != 0 {
-		lastSyllable = refreshLastToneTarget(lastSyllable, e.flags&EstdToneStyle != 0)
-	}
-
+	lastSyllable = e.refreshLastToneTarget(e.applyUowShortcut(lastSyllable))
 	e.composition = append(previousTransformations, lastSyllable...)
 }
 
@@ -282,6 +256,36 @@ func (e *BambooEngine) RemoveLastChar() {
 	for _, trans := range append(transformations, lastAppending) {
 		e.composition = removeTrans(e.composition, trans)
 	}
+}
+
+// Implement the uow typing shortcut by creating a virtual
+// Mark.HORN rule that targets 'u' or 'o'.
+func (e *BambooEngine) applyUowShortcut(syllable []*Transformation) []*Transformation {
+	if e.flags&EautoCorrectEnabled != 0 && len(e.inputMethod.SuperKeys) > 0 && isTransformationForUoMissed(syllable) {
+		if target, missingRule := e.findTargetFromKey(syllable, e.inputMethod.SuperKeys[0]); target != nil {
+			missingRule.Key = rune(0) // virtual rule should not appear in the raw string
+			virtualTrans := &Transformation{
+				Rule:   missingRule,
+				Target: target,
+			}
+			syllable = append(syllable, virtualTrans)
+		}
+	}
+	return syllable
+}
+
+/**
+* Sometimes, a tone's position in a previous state must be changed to fit the new state
+*
+* e.g.
+* prev state: chuyr -> chuỷ
+* this state: chuyrene -> chuyển
+**/
+func (e *BambooEngine) refreshLastToneTarget(syllable []*Transformation) []*Transformation {
+	if e.flags&EfreeToneMarking != 0 {
+		syllable = refreshLastToneTarget(syllable, e.flags&EstdToneStyle != 0)
+	}
+	return syllable
 }
 
 /***** END SIDE-EFFECT METHODS ******/
