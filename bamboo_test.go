@@ -420,5 +420,17 @@ func TestProcessVNWord(t *testing.T) {
 	if ng.GetProcessedString(VietnameseMode, false) != "tối" {
 		t.Errorf("Process tôifs, got [%v] expected [tối]", ng.GetProcessedString(VietnameseMode, false))
 	}
+	if ng.GetProcessedString(EnglishMode, false) != "tôifs" {
+		t.Errorf("Process tôifs, got [%v] expected [tối]", ng.GetProcessedString(VietnameseMode, false))
+	}
+	ng.Reset()
+	s = "tốif"
+	ng.ProcessString(s, VietnameseMode)
+	if ng.GetProcessedString(VietnameseMode, false) != "tồi" {
+		t.Errorf("Process tôifs, got [%v] expected [tồi]", ng.GetProcessedString(VietnameseMode, false))
+	}
+	if ng.GetProcessedString(EnglishMode, false) != "tốif" {
+		t.Errorf("Process tôifs, got [%v] expected [tốif]", ng.GetProcessedString(VietnameseMode, false))
+	}
 	t.Logf("Process [%s] got [%v], en=[%s]", s, ng.GetProcessedString(VietnameseMode, false), ng.GetProcessedString(EnglishMode, false))
 }

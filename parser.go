@@ -170,13 +170,14 @@ func ParseTonelessRules(key rune, line string) []Rule {
 
 func ParseToneLessRule(key, effectiveOn, result rune, effect Mark) []Rule {
 	var rules []Rule
-	for _, mk := range getMarkFamily(effectiveOn) {
-		if mk == result {
+	var tones = []Tone{TONE_NONE, TONE_DOT, TONE_ACUTE, TONE_GRAVE, TONE_HOOK, TONE_TILDE}
+	for _, chr := range getMarkFamily(effectiveOn) {
+		if chr == result {
 			continue
 			var rule Rule
 			rule.Key = key
 			rule.EffectType = MarkTransformation
-			rule.EffectOn = mk
+			rule.EffectOn = chr
 			rule.Effect = uint8(MARK_NONE)
 			rule.Result = key
 			rule.AppendedRules = append(rule.AppendedRules, Rule{
@@ -186,11 +187,21 @@ func ParseToneLessRule(key, effectiveOn, result rune, effect Mark) []Rule {
 				Result:     key,
 			})
 			rules = append(rules, rule)
+		} else if IsVowel(chr) {
+			for tone := range tones {
+				var rule Rule
+				rule.Key = key
+				rule.EffectType = MarkTransformation
+				rule.EffectOn = AddToneToChar(chr, uint8(tone))
+				rule.Effect = uint8(effect)
+				rule.Result = AddToneToChar(result, uint8(tone))
+				rules = append(rules, rule)
+			}
 		} else {
 			var rule Rule
 			rule.Key = key
 			rule.EffectType = MarkTransformation
-			rule.EffectOn = mk
+			rule.EffectOn = chr
 			rule.Effect = uint8(effect)
 			rule.Result = result
 			rules = append(rules, rule)

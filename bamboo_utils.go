@@ -114,7 +114,7 @@ func findMarkTarget(composition []*Transformation, rules []Rule, strict bool) (*
 	for i := len(composition) - 1; i >= 0; i-- {
 		var trans = composition[i]
 		for _, rule := range rules {
-			if trans.Rule.Key == rule.EffectOn || trans.Rule.Result == rule.EffectOn {
+			if trans.Rule.Result == rule.EffectOn {
 				var target = findRootTarget(trans)
 				if strict && !isFreeWithEffectType(composition, target, MarkTransformation) {
 					continue
@@ -394,7 +394,7 @@ func getLastSyllable(composition []*Transformation) []*Transformation {
 		if i < len(composition)-1 && composition[i+1].Rule.EffectType != Appending {
 			continue
 		}
-		str := Flatten(ret, VietnameseMode|ToneLess|LowerCase)
+		str := RemoveToneFromWord(Flatten(ret, VietnameseMode|ToneLess|LowerCase))
 		if str == "" {
 			continue
 		}

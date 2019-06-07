@@ -44,8 +44,9 @@ func TestParseToneRules(t *testing.T) {
 
 func TestParseTonelessRules(t *testing.T) {
 	rules := ParseTonelessRules('d', "D_Đ")
-	if len(rules) != 1 || rules[0].EffectType != MarkTransformation || rules[0].Effect != uint8(MARK_DASH) || rules[0].EffectOn != 'd' {
-		t.Errorf("Test parsing Mark Rule. Got %v, expected %v", rules, Rule{
+	idx := 0
+	if len(rules) != 1 || rules[idx].EffectType != MarkTransformation || rules[idx].Effect != uint8(MARK_DASH) || rules[idx].EffectOn != 'd' {
+		t.Errorf("Test parsing Mark Rule. Got %v, expected %v", rules[idx], Rule{
 			Key:        'd',
 			EffectType: MarkTransformation,
 			Effect:     uint8(MARK_DASH),
@@ -62,8 +63,8 @@ func TestParseTonelessRules(t *testing.T) {
 	}
 	rules = ParseTonelessRules('w', "UOA_ƯƠĂ")
 	t.Log("RULES=", rules)
-	if len(rules) != 5 {
-		t.Errorf("Test the length of parsing mark rule. Got %d, expected %d", len(rules), 5)
+	if len(rules) != 30 {
+		t.Errorf("Test the length of parsing mark rule. Got %d, expected %d", len(rules), 30)
 	}
 	if rules[0].EffectType != MarkTransformation || rules[0].GetMark() != MARK_HORN || rules[0].EffectOn != 'u' {
 		t.Errorf("Test parsing mark Rule. Got %v, expected %v", rules[0], Rule{
@@ -73,16 +74,18 @@ func TestParseTonelessRules(t *testing.T) {
 			EffectOn:   'u',
 		})
 	}
-	if rules[1].EffectType != MarkTransformation || rules[1].GetMark() != MARK_HORN || rules[1].EffectOn != 'o' {
-		t.Errorf("Test parsing mark Rule. Got %v, expected %v", rules[1], Rule{
+	idx = 6
+	if rules[idx].EffectType != MarkTransformation || rules[idx].GetMark() != MARK_HORN || rules[idx].EffectOn != 'o' {
+		t.Errorf("Test parsing mark Rule. Got %v, expected %v", rules[idx], Rule{
 			Key:        'w',
 			EffectType: MarkTransformation,
 			Effect:     uint8(MARK_HORN),
 			EffectOn:   'o',
 		})
 	}
-	if rules[3].EffectType != MarkTransformation || rules[3].GetMark() != MARK_BREVE || rules[3].EffectOn != 'a' {
-		t.Errorf("Test parsing mark Rule. Got %v, expected %v", rules[3], Rule{
+	idx = 18
+	if rules[idx].EffectType != MarkTransformation || rules[idx].GetMark() != MARK_BREVE || rules[idx].EffectOn != 'a' {
+		t.Errorf("Test parsing mark Rule. Got %v, expected %v", rules[idx], Rule{
 			Key:        'w',
 			EffectType: MarkTransformation,
 			Effect:     uint8(MARK_BREVE),
@@ -90,22 +93,25 @@ func TestParseTonelessRules(t *testing.T) {
 		})
 	}
 	rules = ParseTonelessRules('w', "UOA_ƯƠĂ__Ư")
-	if len(rules) != 6 {
-		t.Errorf("Test the length of parsing mark rule. Got %d, expected %d", len(rules), 6)
+	if len(rules) != 31 {
+		t.Errorf("Test the length of parsing mark rule. Got %d, expected %d", len(rules), 31)
 	} else {
 		t.Log("RULES[UOA_ƯƠĂ__Ư]=", rules)
-		if rules[3].EffectType != MarkTransformation || rules[3].GetMark() != MARK_BREVE || rules[3].EffectOn != 'a' {
-			t.Errorf("Test parsing mark Rule. Got %v, expected %v", rules[3], Rule{
+		idx = 18
+		if rules[idx].EffectType != MarkTransformation || rules[idx].GetMark() != MARK_BREVE || rules[idx].EffectOn != 'a' {
+			t.Errorf("Test parsing mark Rule. Got %v, expected %v", rules[idx], Rule{
 				Key:        'w',
 				EffectType: MarkTransformation,
 				Effect:     uint8(MARK_BREVE),
 				EffectOn:   'a',
 			})
 		}
-		if rules[5].EffectType != Appending || rules[5].EffectOn != 'ư' {
-			t.Errorf("Test parsing mark Rule. Got %v, expected %v", rules[5], Rule{
+		idx = 30
+		if rules[idx].EffectType != Appending || rules[idx].EffectOn != 'ư' {
+			t.Errorf("Test parsing mark Rule. Got %v, expected %v", rules[idx], Rule{
 				Key:        'w',
 				EffectType: Appending,
+				EffectOn:   'ư',
 			})
 		}
 	}
