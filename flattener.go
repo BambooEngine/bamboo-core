@@ -46,6 +46,7 @@ func getCanvas(composition []*Transformation, mode Mode) []rune {
 	}
 	for _, appendingTrans := range appendingList {
 		var chr rune
+		var transList = appendingMap[appendingTrans]
 		if mode&EnglishMode != 0 {
 			chr = appendingTrans.Rule.Key
 		} else {
@@ -53,14 +54,17 @@ func getCanvas(composition []*Transformation, mode Mode) []rune {
 			if mode&MarkLess != 0 && (chr < 'a' || chr > 'z') {
 				chr = RemoveMarkFromChar(chr)
 			}
-			var transList = appendingMap[appendingTrans]
 			for _, trans := range transList {
 				switch trans.Rule.EffectType {
 				case MarkTransformation:
 					if mode&MarkLess != 0 {
 						break
 					}
-					chr = AddMarkToChar(chr, trans.Rule.Effect)
+					if trans.Rule.Effect == uint8(MARK_UNDO) {
+						chr = appendingTrans.Rule.Key
+					} else {
+						chr = AddMarkToChar(chr, trans.Rule.Effect)
+					}
 				case ToneTransformation:
 					if mode&ToneLess != 0 {
 						break
@@ -68,6 +72,9 @@ func getCanvas(composition []*Transformation, mode Mode) []rune {
 					chr = AddToneToChar(chr, trans.Rule.Effect)
 				}
 			}
+		}
+		if mode&ToneLess != 0 {
+			chr = AddToneToChar(chr, 0)
 		}
 		if mode&LowerCase != 0 {
 			chr = unicode.ToLower(chr)

@@ -39,6 +39,7 @@ const (
 	Appending          EffectType = iota << 0
 	MarkTransformation EffectType = iota
 	ToneTransformation EffectType = iota
+	Replacing          EffectType = iota
 )
 
 // type alias
@@ -50,6 +51,7 @@ const (
 	MARK_BREVE Mark = iota
 	MARK_HORN  Mark = iota
 	MARK_DASH  Mark = iota
+	MARK_UNDO  Mark = iota
 )
 
 type Tone uint8
@@ -173,19 +175,12 @@ func ParseToneLessRule(key, effectiveOn, result rune, effect Mark) []Rule {
 	var tones = []Tone{TONE_NONE, TONE_DOT, TONE_ACUTE, TONE_GRAVE, TONE_HOOK, TONE_TILDE}
 	for _, chr := range getMarkFamily(effectiveOn) {
 		if chr == result {
-			continue
 			var rule Rule
 			rule.Key = key
 			rule.EffectType = MarkTransformation
-			rule.EffectOn = chr
-			rule.Effect = uint8(MARK_NONE)
-			rule.Result = key
-			rule.AppendedRules = append(rule.AppendedRules, Rule{
-				Key:        0,
-				EffectType: Appending,
-				EffectOn:   key,
-				Result:     key,
-			})
+			rule.Effect = 0
+			rule.EffectOn = result
+			rule.Result = effectiveOn
 			rules = append(rules, rule)
 		} else if IsVowel(chr) {
 			for tone := range tones {

@@ -64,7 +64,6 @@ type IEngine interface {
 	CanProcessKey(rune) bool
 	RemoveLastChar()
 	RestoreLastWord()
-	IsLastWordUpper() bool
 	GetRawString() string
 	Reset()
 }
@@ -118,7 +117,7 @@ func (e *BambooEngine) isEffectiveKey(key rune) bool {
 }
 
 func (e *BambooEngine) GetSpellingMatchResult(mode Mode, deepSearch bool) uint8 {
-	return getSpellingMatchResult(getLastWord(e.composition, nil), mode, deepSearch)
+	return getSpellingMatchResult(getLastWord(e.composition, e.inputMethod.Keys), mode, deepSearch)
 }
 
 func (e *BambooEngine) GetRawString() string {
@@ -151,22 +150,13 @@ func (e *BambooEngine) getApplicableRules(key rune) []Rule {
 	return applicableRules
 }
 
-func (e *BambooEngine) findTargetByKey(composition []*Transformation, key rune, strict bool) (*Transformation, Rule) {
-	return findTargetByKey(composition, e.getApplicableRules(key), e.flags, strict)
+func (e *BambooEngine) findTargetByKey(composition []*Transformation, key rune) (*Transformation, Rule) {
+	return findTarget(composition, e.getApplicableRules(key), e.flags)
 }
 
 // Find all possible transformations this keypress can generate
-func (e *BambooEngine) generateTransformations(composition []*Transformation, key rune, isUpperCase bool) []*Transformation {
-	return generateTransformations(composition, e.getApplicableRules(key), e.flags, key, isUpperCase)
-}
-
-func (e *BambooEngine) IsLastWordUpper() bool {
-	var effectiveKeys = e.inputMethod.Keys
-	var lastComb = getLastWord(e.composition, effectiveKeys)
-	if len(lastComb) == 0 {
-		return false
-	}
-	return isCompositionAllUpper(lastComb)
+func (e *BambooEngine) generateTransformations(composition []*Transformation, lowerKey rune, isUpperCase bool) []*Transformation {
+	return generateTransformations(composition, e.getApplicableRules(lowerKey), e.flags, lowerKey, isUpperCase)
 }
 
 func (e *BambooEngine) CanProcessKey(key rune) bool {
@@ -175,15 +165,6 @@ func (e *BambooEngine) CanProcessKey(key rune) bool {
 
 /***** BEGIN SIDE-EFFECT METHODS ******/
 
-/**
-* 1 | o + ff  ->  undo + append      -> of
-* 2 | o + fs  ->  override			 -> ó
-* 3 | o + fz  ->  undo/override	     -> o
-* 4 | o + z   ->  append			 -> oz
-* 5 | o + f   ->  tone_trans		 -> ò
-* 6 | n + z   ->  append    		 -> nz
-* ...
-**/
 func (e *BambooEngine) ProcessKey(key rune, mode Mode) {
 	var lowerKey = unicode.ToLower(key)
 	var isUpperCase = unicode.IsUpper(key)
@@ -194,18 +175,6 @@ func (e *BambooEngine) ProcessKey(key rune, mode Mode) {
 	// Just process the key stroke on the last syllable
 	var lastSyllable, previousTransformations = extractLastSyllable(e.composition)
 
-	// Double typing an effect key undoes it and its effects.
-	if lastSyllable != nil && e.isEffectiveKey(lowerKey) {
-		target, _ := e.findTargetByKey(lastSyllable, lowerKey, true)
-		if target == nil && isExistedKey(lastSyllable, lowerKey) {
-			lastSyllable = undoesTransformations(lastSyllable, e.getApplicableRules(lowerKey))
-			lastSyllable = append(lastSyllable, newAppendingTrans(lowerKey, isUpperCase))
-			lastSyllable = e.refreshLastToneTarget(lastSyllable)
-			e.composition = append(previousTransformations, lastSyllable...)
-			return
-		}
-	}
-
 	lastSyllable = append(lastSyllable, e.generateTransformations(lastSyllable, lowerKey, isUpperCase)...)
 	lastSyllable = e.refreshLastToneTarget(e.applyUowShortcut(lastSyllable))
 	e.composition = append(previousTransformations, lastSyllable...)
@@ -215,7 +184,7 @@ func (e *BambooEngine) ProcessKey(key rune, mode Mode) {
 // Mark.HORN rule that targets 'u' or 'o'.
 func (e *BambooEngine) applyUowShortcut(syllable []*Transformation) []*Transformation {
 	if e.flags&EautoCorrectEnabled != 0 && len(e.inputMethod.SuperKeys) > 0 && isTransformationForUoMissed(syllable) {
-		if target, missingRule := e.findTargetByKey(syllable, e.inputMethod.SuperKeys[0], true); target != nil {
+		if target, missingRule := e.findTargetByKey(syllable, e.inputMethod.SuperKeys[0]); target != nil {
 			missingRule.Key = rune(0) // virtual rule should not appear in the raw string
 			virtualTrans := &Transformation{
 				Rule:   missingRule,
