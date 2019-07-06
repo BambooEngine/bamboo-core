@@ -56,6 +56,7 @@ type Transformation struct {
 
 type IEngine interface {
 	SetFlag(uint)
+	AddDictionary(map[string]bool)
 	GetInputMethod() InputMethod
 	ProcessKey(rune, Mode)
 	ProcessString(string, Mode)
@@ -74,15 +75,18 @@ type BambooEngine struct {
 	flags       uint
 }
 
-func NewEngine(inputMethod InputMethod, flag uint, dictionary map[string]bool) IEngine {
+func NewEngine(inputMethod InputMethod, flag uint) IEngine {
 	engine := BambooEngine{
 		inputMethod: inputMethod,
 		flags:       flag,
 	}
+	return &engine
+}
+
+func (e *BambooEngine) AddDictionary(dictionary map[string]bool) {
 	for word := range dictionary {
 		AddTrie(spellingTrie, []rune(RemoveToneFromWord(word)), false)
 	}
-	return &engine
 }
 
 func (e *BambooEngine) GetInputMethod() InputMethod {
@@ -235,10 +239,20 @@ func (e *BambooEngine) RemoveLastChar() {
 	if lastAppending == nil {
 		return
 	}
-	var transformations = getTransformationsTargetTo(e.composition, lastAppending)
-	for _, trans := range append(transformations, lastAppending) {
-		e.composition = removeTrans(e.composition, trans)
+	if !e.CanProcessKey(lastAppending.Rule.Key) {
+		e.composition = e.composition[:len(e.composition)-1]
+		return
 	}
+	var lastComb, previous = extractLastWord(e.composition, e.inputMethod.Keys)
+	var newComb []*Transformation
+	for _, t := range lastComb {
+		if t.Target == lastAppending || t == lastAppending {
+			continue
+		}
+		newComb = append(newComb, t)
+	}
+	newComb = e.refreshLastToneTarget(newComb)
+	e.composition = append(previous, newComb...)
 }
 
 /***** END SIDE-EFFECT METHODS ******/
