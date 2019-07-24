@@ -2,18 +2,6 @@
  * Bamboo - A Vietnamese Input method editor
  * Copyright (C) Luong Thanh Lam <ltlam93@gmail.com>
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
  * This software is licensed under the MIT license. For more information,
  * see <https://github.com/BambooEngine/bamboo-core/blob/master/LISENCE>.
  */
@@ -29,52 +17,51 @@ const (
 	FindResultMatchFull
 )
 
-//Word trie
-type W struct {
-	F bool        //Full word
-	N map[rune]*W // Next characters
+type Node struct {
+	Full bool
+	Next map[rune]*Node
 }
 
-func AddTrie(trie *W, s []rune, down bool) {
-	if trie.N == nil {
-		trie.N = map[rune]*W{}
+func AddTrie(trie *Node, s []rune, down bool) {
+	if trie.Next == nil {
+		trie.Next = map[rune]*Node{}
 	}
 
 	//add original char
 	s0 := s[0]
-	if trie.N[s0] == nil {
-		trie.N[s0] = &W{}
+	if trie.Next[s0] == nil {
+		trie.Next[s0] = &Node{}
 	}
 
 	if len(s) == 1 {
-		if !trie.N[s0].F {
-			trie.N[s0].F = !down
+		if !trie.Next[s0].Full {
+			trie.Next[s0].Full = !down
 		}
 	} else {
-		AddTrie(trie.N[s0], s[1:], down)
+		AddTrie(trie.Next[s0], s[1:], down)
 	}
 
 	//add down 1 level char
 	if dmap, exist := downLvlMap[s0]; exist {
 		for _, r := range dmap {
-			if trie.N[r] == nil {
-				trie.N[r] = &W{}
+			if trie.Next[r] == nil {
+				trie.Next[r] = &Node{}
 			}
 
 			if len(s) == 1 {
-				trie.N[r].F = true
+				trie.Next[r].Full = true
 			} else {
-				AddTrie(trie.N[r], s[1:], true)
+				AddTrie(trie.Next[r], s[1:], true)
 			}
 		}
 	}
 }
 
-func TestString(trie *W, s []rune, deepSearch bool) uint8 {
+func TestString(trie *Node, s []rune, deepSearch bool) uint8 {
 
 	if len(s) == 0 {
-		if trie.F {
-			if deepSearch && len(trie.N) > 0 {
+		if trie.Full {
+			if deepSearch && len(trie.Next) > 0 {
 				return FindResultMatchPrefix
 			}
 			return FindResultMatchFull
@@ -84,8 +71,8 @@ func TestString(trie *W, s []rune, deepSearch bool) uint8 {
 
 	c := unicode.ToLower(s[0])
 
-	if trie.N[c] != nil {
-		r := TestString(trie.N[c], s[1:], deepSearch)
+	if trie.Next[c] != nil {
+		r := TestString(trie.Next[c], s[1:], deepSearch)
 		if r != FindResultNotMatch {
 			return r
 		}
@@ -94,29 +81,29 @@ func TestString(trie *W, s []rune, deepSearch bool) uint8 {
 	return FindResultNotMatch
 }
 
-func dfs(trie *W, lookup map[string]bool, s string) {
-	if trie.F {
+func dfs(trie *Node, lookup map[string]bool, s string) {
+	if trie.Full {
 		lookup[s] = true
 	}
-	for chr, t := range trie.N {
+	for chr, t := range trie.Next {
 		var key = s + string(chr)
 		dfs(t, lookup, key)
 	}
 }
 
-func FindNode(trie *W, s []rune) *W {
+func FindNode(trie *Node, s []rune) *Node {
 	if len(s) == 0 {
 		return trie
 	}
 	c := s[0]
-	if trie.N[c] != nil {
-		return FindNode(trie.N[c], s[1:])
+	if trie.Next[c] != nil {
+		return FindNode(trie.Next[c], s[1:])
 	}
 	// not match
 	return nil
 }
 
-func FindWords(trie *W, s string) []string {
+func FindWords(trie *Node, s string) []string {
 	var words []string
 	var node = FindNode(trie, []rune(s))
 	if node == nil {

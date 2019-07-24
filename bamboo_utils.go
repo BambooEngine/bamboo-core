@@ -2,18 +2,6 @@
  * Bamboo - A Vietnamese Input method editor
  * Copyright (C) Luong Thanh Lam <ltlam93@gmail.com>
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
  * This software is licensed under the MIT license. For more information,
  * see <https://github.com/BambooEngine/bamboo-core/blob/master/LISENCE>.
  */
@@ -22,7 +10,6 @@ package bamboo
 import (
 	"log"
 	"regexp"
-	"strings"
 	"unicode"
 )
 
@@ -97,25 +84,6 @@ func findRootTarget(target *Transformation) *Transformation {
 	}
 }
 
-func isMarkTargetValid(composition []*Transformation, trans *Transformation) bool {
-	var soundMap = GetSoundMap(composition)
-	targetSound, found := soundMap[trans.Target]
-	if !found {
-		return false
-	}
-	// the sound of target does not match the sound of the trans that effect on
-	if IsVowel(trans.Rule.EffectOn) && targetSound != VowelSound {
-		return false
-	}
-	if targetSound == VowelSound {
-		var vowels = getRightMostVowelWithMarks(append(composition, trans))
-		if getSpellingMatchResult(vowels, ToneLess, false) == FindResultNotMatch {
-			return false
-		}
-	}
-	return true
-}
-
 // only appending trans has sound
 func getCombinationWithSound(composition []*Transformation) ([]*Transformation, []Sound) {
 	var lastComb = getAppendingComposition(composition)
@@ -157,19 +125,6 @@ func getSpellingMatchResult(composition []*Transformation, mode Mode, deepSearch
 		return TestString(spellingTrie, chars, deepSearch)
 	}
 	return FindResultNotMatch
-}
-
-func GetSoundMap(composition []*Transformation) map[*Transformation]Sound {
-	var soundMap = map[*Transformation]Sound{}
-	var lastComb, sounds = getCombinationWithSound(composition)
-	if len(sounds) <= 0 || len(sounds) != len(lastComb) {
-		log.Println("Something is wrong with the length of sounds")
-		return soundMap
-	}
-	for i, trans := range lastComb {
-		soundMap[trans] = sounds[i]
-	}
-	return soundMap
 }
 
 func getRightMostVowels(composition []*Transformation) []*Transformation {
@@ -272,21 +227,6 @@ func isTransformationForUoMissed(composition []*Transformation) bool {
 		getSpellingMatchResult(composition, ToneLess, false) == FindResultMatchPrefix
 }
 
-func refreshLastToneTarget(transformations []*Transformation, stdStyle bool) []*Transformation {
-	var composition []*Transformation
-	composition = append(composition, transformations...)
-	var rightmostVowels = getRightMostVowels(composition)
-	var lastToneTrans = getLastToneTransformation(composition)
-	if len(rightmostVowels) == 0 || lastToneTrans == nil {
-		return composition
-	}
-	var newToneTarget = findToneTarget(composition, stdStyle)
-	if lastToneTrans.Target != newToneTarget {
-		lastToneTrans.Target = newToneTarget
-	}
-	return composition
-}
-
 func isFree(composition []*Transformation, trans *Transformation, effectType EffectType) bool {
 	for _, t := range composition {
 		if t.Target == trans && t.Rule.EffectType == effectType {
@@ -332,6 +272,15 @@ func getLastWord(composition []*Transformation, effectiveKeys []rune) []*Transfo
 		}
 	}
 	return composition
+}
+
+func containRune(composition []*Transformation, chr rune) bool {
+	for _, trans := range composition {
+		if trans.Rule.EffectType == Appending && trans.Rule.Result == chr {
+			return true
+		}
+	}
+	return false
 }
 
 func getLastSyllable(composition []*Transformation) []*Transformation {
@@ -408,8 +357,8 @@ func findMarkTarget(composition []*Transformation, rules []Rule) (*Transformatio
 				if str == Flatten(append(composition, &Transformation{Target: target, Rule: rule}), VietnameseMode) {
 					continue
 				}
-				if isMarkTargetValid(composition, &Transformation{
-					Rule: rule, Target: target}) {
+				var tmp = append(composition, &Transformation{Rule: rule, Target: target})
+				if getSpellingMatchResult(tmp, ToneLess, false) != FindResultNotMatch {
 					return target, rule
 				}
 			}
@@ -526,10 +475,8 @@ func generateTransformations(composition []*Transformation, applicableRules []Ru
 		// If an effect key can't find its target, it tries to undo its brothers, e.g. ươ + w -> uow
 		if undoTrans := generateUndoTransformations(composition, applicableRules, flags); len(undoTrans) > 0 {
 			var vowels = getRightMostVowelWithMarks(append(composition, undoTrans...))
-			var oVowels = getRightMostVowelWithMarks(composition)
-			// Exception: ươ + o -> uô
-			if strings.Contains(Flatten(oVowels, VietnameseMode), "ươ") &&
-				strings.Contains(Flatten(vowels, VietnameseMode), "ưo") {
+			// Exception: ươ/ưo + o -> uô
+			if lowerKey == 'o' && containRune(composition, 'u') {
 				var trans = &Transformation{
 					Target: vowels[0],
 					Rule: Rule{
@@ -570,16 +517,6 @@ func generateTransformations(composition []*Transformation, applicableRules []Ru
 	return transformations
 }
 
-func removeTrans(composition []*Transformation, trans *Transformation) []*Transformation {
-	var result []*Transformation
-	for _, t := range composition {
-		if t != trans {
-			result = append(result, t)
-		}
-	}
-	return result
-}
-
 func breakComposition(composition []*Transformation) []*Transformation {
 	var result []*Transformation
 	for _, trans := range composition {
@@ -589,4 +526,17 @@ func breakComposition(composition []*Transformation) []*Transformation {
 		result = append(result, newAppendingTrans(trans.Rule.Key, trans.IsUpperCase))
 	}
 	return result
+}
+
+func refreshLastToneTarget(composition []*Transformation, stdStyle bool) []*Transformation {
+	var rightmostVowels = getRightMostVowels(composition)
+	var lastToneTrans = getLastToneTransformation(composition)
+	if len(rightmostVowels) == 0 || lastToneTrans == nil {
+		return composition
+	}
+	var newToneTarget = findToneTarget(composition, stdStyle)
+	if lastToneTrans.Target != newToneTarget {
+		lastToneTrans.Target = newToneTarget
+	}
+	return composition
 }
