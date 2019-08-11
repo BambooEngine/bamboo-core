@@ -93,7 +93,13 @@ func buildCVC(cs1 []string, vs1 []string, cs2 []string) []string {
 
 func init() {
 	for _, word := range GenerateDictionary() {
-		AddTrie(spellingTrie, []rune(word), false)
+		AddTrie(spellingTrie, []rune(word), false, false)
+	}
+}
+
+func AddDictionaryToSpellingTrie(dictionary map[string]bool) {
+	for word := range dictionary {
+		AddTrie(spellingTrie, []rune(word), true, false)
 	}
 }
 

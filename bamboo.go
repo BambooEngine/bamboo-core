@@ -44,12 +44,11 @@ type Transformation struct {
 
 type IEngine interface {
 	SetFlag(uint)
-	AddDictionary(map[string]bool)
 	GetInputMethod() InputMethod
 	ProcessKey(rune, Mode)
 	ProcessString(string, Mode)
 	GetProcessedString(Mode) string
-	GetSpellingMatchResult(Mode) uint8
+	GetSpellingMatchResult(Mode, bool) uint8
 	CanProcessKey(rune) bool
 	RemoveLastChar()
 	RestoreLastWord()
@@ -69,12 +68,6 @@ func NewEngine(inputMethod InputMethod, flag uint) IEngine {
 		flags:       flag,
 	}
 	return &engine
-}
-
-func (e *BambooEngine) AddDictionary(dictionary map[string]bool) {
-	for word := range dictionary {
-		AddTrie(spellingTrie, []rune(RemoveToneFromWord(word)), false)
-	}
 }
 
 func (e *BambooEngine) GetInputMethod() InputMethod {
@@ -108,8 +101,8 @@ func (e *BambooEngine) isEffectiveKey(key rune) bool {
 	return inKeyList(e.GetInputMethod().Keys, key)
 }
 
-func (e *BambooEngine) GetSpellingMatchResult(mode Mode) uint8 {
-	return getSpellingMatchResult(getLastWord(e.composition, e.inputMethod.Keys), mode, false)
+func (e *BambooEngine) GetSpellingMatchResult(mode Mode, dictionary bool) uint8 {
+	return getSpellingMatchResult(getLastWord(e.composition, e.inputMethod.Keys), mode, dictionary)
 }
 
 func (e *BambooEngine) GetRawString() string {

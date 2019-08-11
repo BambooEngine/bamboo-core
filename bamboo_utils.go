@@ -112,7 +112,7 @@ func getCompositionBySound(composition []*Transformation, sound Sound) []*Transf
 	return ret
 }
 
-func getSpellingMatchResult(composition []*Transformation, mode Mode, deepSearch bool) uint8 {
+func getSpellingMatchResult(composition []*Transformation, mode Mode, dictionary bool) uint8 {
 	if len(composition) <= 0 {
 		return FindResultMatchFull
 	}
@@ -122,7 +122,7 @@ func getSpellingMatchResult(composition []*Transformation, mode Mode, deepSearch
 		if len(chars) <= 1 {
 			return FindResultMatchFull
 		}
-		return TestString(spellingTrie, chars, deepSearch)
+		return TestString(spellingTrie, chars, dictionary)
 	}
 	return FindResultNotMatch
 }

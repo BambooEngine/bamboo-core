@@ -18,11 +18,12 @@ const (
 )
 
 type Node struct {
-	Full bool
-	Next map[rune]*Node
+	Full       bool
+	Dictionary bool
+	Next       map[rune]*Node
 }
 
-func AddTrie(trie *Node, s []rune, down bool) {
+func AddTrie(trie *Node, s []rune, dictionary bool, down bool) {
 	if trie.Next == nil {
 		trie.Next = map[rune]*Node{}
 	}
@@ -36,34 +37,37 @@ func AddTrie(trie *Node, s []rune, down bool) {
 	if len(s) == 1 {
 		if !trie.Next[s0].Full {
 			trie.Next[s0].Full = !down
+			trie.Next[s0].Dictionary = dictionary
 		}
 	} else {
-		AddTrie(trie.Next[s0], s[1:], down)
+		AddTrie(trie.Next[s0], s[1:], dictionary, down)
 	}
 
 	//add down 1 level char
-	if dmap, exist := downLvlMap[s0]; exist {
-		for _, r := range dmap {
-			if trie.Next[r] == nil {
-				trie.Next[r] = &Node{}
-			}
+	var r0 = AddToneToChar(RemoveMarkFromChar(s0), uint8(TONE_NONE))
+	if r0 != s0 {
+		if trie.Next[r0] == nil {
+			trie.Next[r0] = &Node{}
+		}
 
-			if len(s) == 1 {
-				trie.Next[r].Full = true
-			} else {
-				AddTrie(trie.Next[r], s[1:], true)
-			}
+		if len(s) == 1 {
+			trie.Next[r0].Full = true
+		} else {
+			AddTrie(trie.Next[r0], s[1:], false, true)
 		}
 	}
 }
 
-func TestString(trie *Node, s []rune, deepSearch bool) uint8 {
+func TestString(trie *Node, s []rune, dictionary bool) uint8 {
 
 	if len(s) == 0 {
-		if trie.Full {
-			if deepSearch && len(trie.Next) > 0 {
-				return FindResultMatchPrefix
+		if dictionary {
+			if trie.Full && trie.Dictionary {
+				return FindResultMatchFull
 			}
+			return FindResultNotMatch
+		}
+		if trie.Full {
 			return FindResultMatchFull
 		}
 		return FindResultMatchPrefix
@@ -72,7 +76,7 @@ func TestString(trie *Node, s []rune, deepSearch bool) uint8 {
 	c := unicode.ToLower(s[0])
 
 	if trie.Next[c] != nil {
-		r := TestString(trie.Next[c], s[1:], deepSearch)
+		r := TestString(trie.Next[c], s[1:], dictionary)
 		if r != FindResultNotMatch {
 			return r
 		}
