@@ -136,15 +136,15 @@ func (e *BambooEngine) findTargetByKey(composition []*Transformation, key rune) 
 	return findTarget(composition, e.getApplicableRules(key), e.flags)
 }
 
-func (e *BambooEngine) generateTransformations(composition []*Transformation, lowerKey rune, isUpperCase bool) []*Transformation {
-	return generateTransformations(composition, e.getApplicableRules(lowerKey), e.flags, lowerKey, isUpperCase)
-}
-
 func (e *BambooEngine) CanProcessKey(key rune) bool {
 	return e.isSupportedKey(key)
 }
 
-/***** BEGIN SIDE-EFFECT METHODS ******/
+func (e *BambooEngine) ProcessString(str string, mode Mode) {
+	for _, key := range []rune(str) {
+		e.ProcessKey(key, mode)
+	}
+}
 
 func (e *BambooEngine) ProcessKey(key rune, mode Mode) {
 	var lowerKey = unicode.ToLower(key)
@@ -159,45 +159,58 @@ func (e *BambooEngine) ProcessKey(key rune, mode Mode) {
 	// Find all possible transformations this keypress can generate
 	lastSyllable = append(lastSyllable, e.generateTransformations(lastSyllable, lowerKey, isUpperCase)...)
 
-	lastSyllable = e.refreshLastToneTarget(e.applyUowShortcut(lastSyllable))
+	// Put these transformations back to the composition
 	e.composition = append(previousTransformations, lastSyllable...)
 }
 
-// Implement the uow typing shortcut by creating a virtual
-// Mark.HORN rule that targets 'u' or 'o'.
-func (e *BambooEngine) applyUowShortcut(syllable []*Transformation) []*Transformation {
-	if len(e.inputMethod.SuperKeys) > 0 && isTransformationForUoMissed(syllable) {
+func (e *BambooEngine) generateTransformations(composition []*Transformation, lowerKey rune, isUpperCase bool) []*Transformation {
+	var transformations = generateTransformations(composition, e.getApplicableRules(lowerKey), e.flags, lowerKey, isUpperCase)
+	if transformations == nil {
+		// If none of the applicable_rules can actually be applied then this new
+		// transformation fall-backs to an APPENDING one.
+		transformations = generateFallbackTransformations(e.getApplicableRules(lowerKey), lowerKey, isUpperCase)
+		var newComposition = append(composition, transformations...)
+
+		// Implement the uow typing shortcut by creating a virtual
+		// Mark.HORN rule that targets 'u' or 'o'.
+		if virtualTrans := e.applyUowShortcut(newComposition); virtualTrans != nil {
+			transformations = append(transformations, virtualTrans)
+		}
+	}
+	/**
+	* Sometimes, a tone's position in a previous state must be changed to fit the new state
+	*
+	* e.g.
+	* prev state: chuyr -> chuỷ
+	* this state: chuyrene -> chuyển
+	**/
+	transformations = append(transformations, e.refreshLastToneTarget(append(composition, transformations...))...)
+	return transformations
+}
+
+func (e *BambooEngine) applyUowShortcut(syllable []*Transformation) *Transformation {
+	str := Flatten(syllable, ToneLess|LowerCase)
+	if len(e.inputMethod.SuperKeys) > 0 && regUOh_UhO_Tail.MatchString(str) {
 		if target, missingRule := e.findTargetByKey(syllable, e.inputMethod.SuperKeys[0]); target != nil {
 			missingRule.Key = rune(0) // virtual rule should not appear in the raw string
 			virtualTrans := &Transformation{
 				Rule:   missingRule,
 				Target: target,
 			}
-			syllable = append(syllable, virtualTrans)
+			return virtualTrans
 		}
 	}
-	return syllable
+	return nil
 }
 
-/**
-* Sometimes, a tone's position in a previous state must be changed to fit the new state
-*
-* e.g.
-* prev state: chuyr -> chuỷ
-* this state: chuyrene -> chuyển
-**/
 func (e *BambooEngine) refreshLastToneTarget(syllable []*Transformation) []*Transformation {
-	if e.flags&EfreeToneMarking != 0 && getSpellingMatchResult(syllable, ToneLess, false) != FindResultNotMatch {
-		syllable = refreshLastToneTarget(syllable, e.flags&EstdToneStyle != 0)
+	if e.flags&EfreeToneMarking != 0 && getSpellingMatchResult(syllable, ToneLess|LowerCase, false) != FindResultNotMatch {
+		return refreshLastToneTarget(syllable, e.flags&EstdToneStyle != 0)
 	}
-	return syllable
+	return nil
 }
 
-func (e *BambooEngine) ProcessString(str string, mode Mode) {
-	for _, key := range []rune(str) {
-		e.ProcessKey(key, mode)
-	}
-}
+/***** BEGIN SIDE-EFFECT METHODS ******/
 
 func (e *BambooEngine) RestoreLastWord() {
 	var lastComb, previous = extractLastWord(e.composition, e.inputMethod.Keys)
@@ -230,7 +243,7 @@ func (e *BambooEngine) RemoveLastChar() {
 		}
 		newComb = append(newComb, t)
 	}
-	newComb = e.refreshLastToneTarget(newComb)
+	newComb = append(newComb, e.refreshLastToneTarget(newComb)...)
 	e.composition = append(previous, newComb...)
 }
 

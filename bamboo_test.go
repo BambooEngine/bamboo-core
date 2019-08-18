@@ -16,7 +16,9 @@ func TestProcessString(t *testing.T) {
 		t.Errorf("Process [aw], got [%s] expected [%s]", ng.GetProcessedString(VietnameseMode), "ă")
 	}
 	ng.Reset()
-	ng.ProcessString("uwow", VietnameseMode)
+	ng.ProcessString("uw", VietnameseMode)
+	ng.ProcessString("o", VietnameseMode)
+	ng.ProcessString("w", VietnameseMode)
 	if ng.GetProcessedString(VietnameseMode) != "ươ" {
 		t.Errorf("Process [uwow], got [%s] expected [%s]", ng.GetProcessedString(VietnameseMode), "ươ")
 	}
@@ -339,6 +341,9 @@ func TestProcessEenghf(t *testing.T) {
 	ng := NewEngine(im, EstdFlags)
 	AddDictionaryToSpellingTrie(map[string]bool{"ềngh": true})
 	ng.ProcessString("eenghf", VietnameseMode)
+	if ng.GetSpellingMatchResult(VietnameseMode|LowerCase, true) != FindResultMatchFull {
+		t.Errorf("Find result match full, got [%v] expected [true]", ng.GetSpellingMatchResult(VietnameseMode, true) == FindResultMatchFull)
+	}
 	if ng.GetProcessedString(VietnameseMode) != "ềngh" {
 		t.Errorf("Process eenghf, got [%v] expected [ềnhg]", ng.GetProcessedString(VietnameseMode))
 	}
@@ -467,7 +472,7 @@ func TestRestoreLastWord(t *testing.T) {
 	ng.RestoreLastWord()
 	ng.RemoveLastChar()
 	ng.ProcessKey('f', VietnameseMode)
-	t.Logf("Process [%s] got [%v], en=[%s]", s, ng.GetProcessedString(VietnameseMode), ng.GetProcessedString(EnglishMode))
+	t.Logf("LOGGING Process [%s] got [%v], en=[%s]", s, ng.GetProcessedString(VietnameseMode), ng.GetProcessedString(EnglishMode))
 }
 
 func TestProcessVNWord(t *testing.T) {
@@ -506,6 +511,13 @@ func TestDoubleTyping(t *testing.T) {
 		t.Errorf("Process [linuxx], got [%v] expected [linux]", ng.GetProcessedString(VietnameseMode))
 	}
 	ng.Reset()
+	s = "buwo"
+	ng.ProcessString(s, VietnameseMode)
+	ng.ProcessString("o", VietnameseMode)
+	if ng.GetProcessedString(VietnameseMode) != "buô" {
+		t.Errorf("Process [buwoo], got [%s] expected [buô]", ng.GetProcessedString(VietnameseMode))
+	}
+	ng.Reset()
 	s = "buowc"
 	ng.ProcessString(s, VietnameseMode)
 	ng.ProcessString("o", VietnameseMode)
@@ -525,5 +537,37 @@ func TestDoubleTyping(t *testing.T) {
 	ng.ProcessString("a", VietnameseMode)
 	if ng.GetProcessedString(VietnameseMode) != "acha" {
 		t.Errorf("Process [acha], got [%s] expected [acha]", ng.GetProcessedString(VietnameseMode))
+	}
+	ng.Reset()
+	s = "nhuw"
+	ng.ProcessString(s, VietnameseMode)
+	if ng.GetProcessedString(VietnameseMode) != "như" {
+		t.Errorf("Process [acha], got [%s] expected [như]", ng.GetProcessedString(VietnameseMode))
+	}
+	if ng.GetSpellingMatchResult(VietnameseMode, false) != FindResultMatchFull {
+		t.Errorf("Findresultmatch full, got %d expected true", ng.GetSpellingMatchResult(VietnameseMode, false))
+	}
+	AddDictionaryToSpellingTrie(map[string]bool{"thứ": true})
+	ng.Reset()
+	s = "thuw"
+	ng.ProcessString(s, VietnameseMode)
+	if ng.GetSpellingMatchResult(VietnameseMode, false) != FindResultMatchFull {
+		t.Errorf("Findresultmatchfull, got %d expected true", ng.GetSpellingMatchResult(VietnameseMode, false))
+	}
+	ng.Reset()
+	s = "thow"
+	ng.ProcessString(s, VietnameseMode)
+	if ng.GetSpellingMatchResult(VietnameseMode, false) != FindResultMatchFull {
+		t.Errorf("Findresultmatchfull, got %d expected true", ng.GetSpellingMatchResult(VietnameseMode, false))
+	}
+	ng.Reset()
+	AddDictionaryToSpellingTrie(map[string]bool{"tôi": true, "tối": true, "tời": true, "tơi": true})
+	s = "tooi"
+	ng.ProcessString(s, VietnameseMode)
+	if ng.GetProcessedString(VietnameseMode) != "tôi" {
+		t.Errorf("Process [acha], got [%s] expected [tôi]", ng.GetProcessedString(VietnameseMode))
+	}
+	if ng.GetSpellingMatchResult(VietnameseMode, true) != FindResultMatchFull {
+		t.Errorf("Findresultmatch full, got %d expected true", ng.GetSpellingMatchResult(VietnameseMode, true))
 	}
 }

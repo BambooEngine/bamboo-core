@@ -20,40 +20,46 @@ const (
 type Node struct {
 	Full       bool
 	Dictionary bool
-	Next       map[rune]*Node
+	Children   map[rune]*Node
 }
 
 func AddTrie(trie *Node, s []rune, dictionary bool, down bool) {
-	if trie.Next == nil {
-		trie.Next = map[rune]*Node{}
+	if trie.Children == nil {
+		trie.Children = map[rune]*Node{}
 	}
 
 	//add original char
 	s0 := s[0]
-	if trie.Next[s0] == nil {
-		trie.Next[s0] = &Node{}
+	if trie.Children[s0] == nil {
+		trie.Children[s0] = &Node{}
 	}
 
 	if len(s) == 1 {
-		if !trie.Next[s0].Full {
-			trie.Next[s0].Full = !down
-			trie.Next[s0].Dictionary = dictionary
+		if !trie.Children[s0].Full {
+			trie.Children[s0].Full = !down
 		}
+		trie.Children[s0].Dictionary = dictionary
 	} else {
-		AddTrie(trie.Next[s0], s[1:], dictionary, down)
+		AddTrie(trie.Children[s0], s[1:], dictionary, down)
 	}
 
 	//add down 1 level char
-	var r0 = AddToneToChar(RemoveMarkFromChar(s0), uint8(TONE_NONE))
+	var r0 = RemoveMarkFromChar(s0)
 	if r0 != s0 {
-		if trie.Next[r0] == nil {
-			trie.Next[r0] = &Node{}
+		if trie.Children[r0] == nil {
+			trie.Children[r0] = &Node{}
 		}
-
-		if len(s) == 1 {
-			trie.Next[r0].Full = true
-		} else {
-			AddTrie(trie.Next[r0], s[1:], false, true)
+		if len(s) > 1 {
+			AddTrie(trie.Children[r0], s[1:], dictionary, true)
+		}
+	}
+	var r1 = AddToneToChar(r0, uint8(TONE_NONE))
+	if r1 != s0 && r1 != r0 {
+		if trie.Children[r1] == nil {
+			trie.Children[r1] = &Node{}
+		}
+		if len(s) > 1 {
+			AddTrie(trie.Children[r1], s[1:], dictionary, true)
 		}
 	}
 }
@@ -75,8 +81,8 @@ func TestString(trie *Node, s []rune, dictionary bool) uint8 {
 
 	c := unicode.ToLower(s[0])
 
-	if trie.Next[c] != nil {
-		r := TestString(trie.Next[c], s[1:], dictionary)
+	if trie.Children[c] != nil {
+		r := TestString(trie.Children[c], s[1:], dictionary)
 		if r != FindResultNotMatch {
 			return r
 		}
@@ -89,7 +95,7 @@ func dfs(trie *Node, lookup map[string]bool, s string) {
 	if trie.Full {
 		lookup[s] = true
 	}
-	for chr, t := range trie.Next {
+	for chr, t := range trie.Children {
 		var key = s + string(chr)
 		dfs(t, lookup, key)
 	}
@@ -100,8 +106,8 @@ func FindNode(trie *Node, s []rune) *Node {
 		return trie
 	}
 	c := s[0]
-	if trie.Next[c] != nil {
-		return FindNode(trie.Next[c], s[1:])
+	if trie.Children[c] != nil {
+		return FindNode(trie.Children[c], s[1:])
 	}
 	// not match
 	return nil
