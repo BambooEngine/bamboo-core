@@ -9,7 +9,6 @@ package bamboo
 
 type InputMethodDefinition map[string]string
 
-// todo: move to input_method.json
 var InputMethodDefinitions = map[string]InputMethodDefinition{
 	"Telex": {
 		"z": "XoaDauThanh",
@@ -156,7 +155,7 @@ var InputMethodDefinitions = map[string]InputMethodDefinition{
 		"ç":  "A_Ă",
 		"à":  "D_Đ",
 	},
-	"Telex 3": {
+	"Telex W": {
 		"z": "XoaDauThanh",
 		"s": "DauSac",
 		"f": "DauHuyen",
@@ -166,9 +165,7 @@ var InputMethodDefinitions = map[string]InputMethodDefinition{
 		"a": "A_Â",
 		"e": "E_Ê",
 		"o": "O_Ô",
-		"w": "UOA_ƯƠĂ",
+		"w": "UOA_ƯƠĂ__Ư",
 		"d": "D_Đ",
-		"[": "__ươ",
-		"{": "_ƯƠ",
 	},
 }
