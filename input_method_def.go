@@ -3,7 +3,7 @@
  * Copyright (C) Luong Thanh Lam <ltlam93@gmail.com>
  *
  * This software is licensed under the MIT license. For more information,
- * see <https://github.com/BambooEngine/bamboo-core/blob/master/LISENCE>.
+ * see <https://github.com/BambooEngine/bamboo-core/blob/master/LICENSE>.
  */
 package bamboo
 
@@ -35,7 +35,6 @@ var InputMethodDefinitions = map[string]InputMethodDefinition{
 		"8": "A_Ă",
 		"9": "D_Đ",
 	},
-
 	"VIQR": {
 		"0":  "XoaDauThanh",
 		"'":  "DauSac",
@@ -168,4 +167,12 @@ var InputMethodDefinitions = map[string]InputMethodDefinition{
 		"w": "UOA_ƯƠĂ__Ư",
 		"d": "D_Đ",
 	},
+}
+
+func GetInputMethodDefinitions() map[string]InputMethodDefinition {
+	var t = make(map[string]InputMethodDefinition)
+	for k, v := range InputMethodDefinitions {
+		t[k] = v
+	}
+	return t
 }
