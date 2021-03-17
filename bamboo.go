@@ -191,7 +191,7 @@ func (e *BambooEngine) refreshLastToneTarget(syllable []*Transformation) []*Tran
 /***** BEGIN SIDE-EFFECT METHODS ******/
 
 func (e *BambooEngine) ProcessString(str string, mode Mode) {
-	for _, key := range []rune(str) {
+	for _, key := range str {
 		e.ProcessKey(key, mode)
 	}
 }
