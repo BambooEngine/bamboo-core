@@ -260,7 +260,7 @@ func extractLastWord(composition []*Transformation, effectKeys []rune) ([]*Trans
 func extractLastSyllable(composition []*Transformation) ([]*Transformation, []*Transformation) {
 	var previous, last = extractLastWord(composition, nil)
 	var anchor = 0
-	for i, _ := range last {
+	for i := range last {
 		if !isValid(last[anchor:i+1], false) {
 			anchor = i
 		}

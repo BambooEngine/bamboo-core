@@ -68,7 +68,7 @@ var marksMaps = map[rune]string{
 func getMarkFamily(chr rune) []rune {
 	var result []rune
 	if s, found := marksMaps[chr]; found {
-		for _, c := range []rune(s) {
+		for _, c := range s {
 			if c != '_' {
 				result = append(result, c)
 			}
@@ -154,7 +154,7 @@ func IsVietnameseRune(chr rune) bool {
 }
 
 func HasAnyVietnameseRune(word string) bool {
-	for _, chr := range []rune(word) {
+	for _, chr := range word {
 		if IsVietnameseRune(chr) {
 			return true
 		}

@@ -85,7 +85,6 @@ func isValidCVC(fc, vo, lc string, inputIsFullComplete bool) bool {
 	var ret bool
 	var fcIndexes, voIndexes, lcIndexes []int
 	defer func() {
-		return
 		log.Printf("fc=%s vo=%s lc=%s ret=%v", fc, vo, lc, ret)
 	}()
 	if fc != "" {
@@ -110,7 +109,7 @@ func isValidCVC(fc, vo, lc string, inputIsFullComplete bool) bool {
 	if fcIndexes != nil {
 		// first consonant + vowel
 		ret = isValidCV(fcIndexes, voIndexes)
-		if ret == false || lcIndexes == nil {
+		if !ret || lcIndexes == nil {
 			return ret
 		}
 	}
