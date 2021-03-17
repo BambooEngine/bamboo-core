@@ -78,23 +78,11 @@ func (e *BambooEngine) GetFlag(flag uint) uint {
 	return e.flags
 }
 
-func (e *BambooEngine) isSuperKey(key rune) bool {
-	return inKeyList(e.GetInputMethod().SuperKeys, key)
-}
-
 func (e *BambooEngine) isSupportedKey(key rune) bool {
 	if IsAlpha(key) || inKeyList(e.GetInputMethod().Keys, key) {
 		return true
 	}
 	return IsVietnameseRune(key)
-}
-
-func (e *BambooEngine) isToneKey(key rune) bool {
-	return inKeyList(e.GetInputMethod().ToneKeys, key)
-}
-
-func (e *BambooEngine) isEffectiveKey(key rune) bool {
-	return inKeyList(e.GetInputMethod().Keys, key)
 }
 
 func (e *BambooEngine) IsValid(inputIsFullComplete bool) bool {
