@@ -85,8 +85,8 @@ func isValidCVC(fc, vo, lc string, inputIsFullComplete bool) bool {
 	var ret bool
 	var fcIndexes, voIndexes, lcIndexes []int
 	defer func() {
-		return
 		log.Printf("fc=%s vo=%s lc=%s ret=%v", fc, vo, lc, ret)
+		return
 	}()
 	if fc != "" {
 		if fcIndexes = lookup(firstConsonantSeqs, fc, inputIsFullComplete || vo != "", true); fcIndexes == nil {
