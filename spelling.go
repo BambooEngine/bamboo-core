@@ -110,7 +110,7 @@ func isValidCVC(fc, vo, lc string, inputIsFullComplete bool) bool {
 	if fcIndexes != nil {
 		// first consonant + vowel
 		ret = isValidCV(fcIndexes, voIndexes)
-		if ret == false || lcIndexes == nil {
+		if !ret || lcIndexes == nil {
 			return ret
 		}
 	}
