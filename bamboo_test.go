@@ -160,21 +160,6 @@ func TestProcessDD(t *testing.T) {
 	}
 }
 
-func TestTelex3(t *testing.T) {
-	return
-	var im = ParseInputMethod(InputMethodDefinitions, "Telex 3")
-	var ng = NewEngine(im, EstdFlags)
-	ng.ProcessString("[", VietnameseMode)
-	if ng.GetProcessedString(VietnameseMode) != "ươ" {
-		t.Errorf("Process Telex 3 [[], got [%v] expected [ươ]", ng.GetProcessedString(VietnameseMode))
-	}
-	ng.Reset()
-	ng.ProcessString("{", VietnameseMode)
-	if ng.GetProcessedString(VietnameseMode) != "ƯƠ" {
-		t.Errorf("Process Telex 3 [{], got [%s] expected [ƯƠ]", ng.GetProcessedString(EnglishMode))
-	}
-}
-
 func TestProcessNguwowfiString(t *testing.T) {
 	ng := newStdEngine()
 	ng.ProcessString("wowfi", VietnameseMode)
