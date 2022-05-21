@@ -14,7 +14,7 @@ func TestIsVowel(t *testing.T) {
 	if IsVowel('b') {
 		t.Errorf("b is not a vowel, but result is true")
 	}
-	tvowels := []rune("aàáảãạăằắẳẵặâầấẩẫậeèéẻẽẹêềếểễệiìíỉĩịoòóỏõọôồốổỗộơờớởỡợuùúủũụưừứửữựyỳýỷỹỵ")
+	tvowels := "aàáảãạăằắẳẵặâầấẩẫậeèéẻẽẹêềếểễệiìíỉĩịoòóỏõọôồốổỗộơờớởỡợuùúủũụưừứửữựyỳýỷỹỵ"
 	for _, v := range tvowels {
 		if IsVowel(v) == false {
 			t.Errorf("%c is a vowel, but the result is false", v)

@@ -15,7 +15,7 @@ func Encode(charsetName string, input string) string {
 	}
 	var output string
 	if charset, found := charsetDefinitions[charsetName]; found {
-		for _, chr := range []rune(input) {
+		for _, chr := range input {
 			if out, found := charset[chr]; found {
 				output = output + out
 			} else {
