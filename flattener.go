@@ -5,6 +5,7 @@
  * This software is licensed under the MIT license. For more information,
  * see <https://github.com/BambooEngine/bamboo-core/blob/master/LICENSE>.
  */
+
 package bamboo
 
 import (
@@ -46,7 +47,7 @@ func getCanvas(composition []*Transformation, mode Mode) []rune {
 			for _, trans := range transList {
 				switch trans.Rule.EffectType {
 				case MarkTransformation:
-					if trans.Rule.Effect == uint8(MARK_RAW) {
+					if trans.Rule.Effect == uint8(MarkRaw) {
 						chr = appendingTrans.Rule.Key
 					} else {
 						chr = AddMarkToChar(chr, trans.Rule.Effect)

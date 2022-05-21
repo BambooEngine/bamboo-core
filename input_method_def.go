@@ -5,6 +5,7 @@
  * This software is licensed under the MIT license. For more information,
  * see <https://github.com/BambooEngine/bamboo-core/blob/master/LICENSE>.
  */
+
 package bamboo
 
 type InputMethodDefinition map[string]string
@@ -36,17 +37,17 @@ var InputMethodDefinitions = map[string]InputMethodDefinition{
 		"9": "D_Đ",
 	},
 	"VIQR": {
-		"0":  "XoaDauThanh",
-		"'":  "DauSac",
-		"`":  "DauHuyen",
-		"?":  "DauHoi",
-		"~":  "DauNga",
-		".":  "DauNang",
-		"^":  "AEO_ÂÊÔ",
-		"+":  "UO_ƯƠ",
-		"*":  "UO_ƯƠ",
-		"(":  "A_Ă",
-		"\\": "D_Đ",
+		"0": "XoaDauThanh",
+		"'": "DauSac",
+		"`": "DauHuyen",
+		"?": "DauHoi",
+		"~": "DauNga",
+		".": "DauNang",
+		"^": "AEO_ÂÊÔ",
+		"+": "UO_ƯƠ",
+		"*": "UO_ƯƠ",
+		"(": "A_Ă",
+		"d": "D_Đ",
 	},
 	"Microsoft layout": {
 		"8": "DauSac",

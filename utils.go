@@ -5,9 +5,12 @@
  * This software is licensed under the MIT license. For more information,
  * see <https://github.com/BambooEngine/bamboo-core/blob/master/LICENSE>.
  */
+
 package bamboo
 
-import "unicode"
+import (
+	"unicode"
+)
 
 var Vowels = []rune("aàáảãạăằắẳẵặâầấẩẫậeèéẻẽẹêềếểễệiìíỉĩịoòóỏõọôồốổỗộơờớởỡợuùúủũụưừứửữựyỳýỷỹỵ")
 
@@ -16,6 +19,10 @@ var PunctuationMarks = []rune{
 	'<', '>', '=', '+', '-', '*', '/', '\\',
 	'_', '~', '`', '@', '#', '$', '%', '^', '&', '(', ')', '{', '}', '[', ']',
 	'|',
+}
+
+func IsSpace(key rune) bool {
+	return key == ' '
 }
 
 func IsPunctuationMark(key rune) bool {
@@ -129,7 +136,7 @@ func inKeyList(keys []rune, key rune) bool {
 func FindToneFromChar(chr rune) Tone {
 	pos := FindVowelPosition(chr)
 	if pos == -1 {
-		return TONE_NONE
+		return ToneNone
 	}
 	return Tone(pos % 6)
 }
@@ -137,25 +144,44 @@ func FindToneFromChar(chr rune) Tone {
 func AddToneToChar(chr rune, tone uint8) rune {
 	pos := FindVowelPosition(chr)
 	if pos > -1 {
-		current_tone := pos % 6
-		offset := int(tone) - current_tone
+		currentTone := pos % 6
+		offset := int(tone) - currentTone
 		return Vowels[pos+offset]
 	} else {
 		return chr
 	}
 }
 
-func IsVietnameseRune(chr rune) bool {
-	var c = unicode.ToLower(chr)
-	if FindToneFromChar(c) != TONE_NONE {
+func canProcessKey(lowerKey rune, effectKeys []rune) bool {
+	if IsAlpha(lowerKey) || inKeyList(effectKeys, lowerKey) {
 		return true
 	}
-	return c != AddMarkToTonelessChar(c, 0)
+	if IsWordBreakSymbol(lowerKey) {
+		return false
+	}
+	return IsVietnameseRune(lowerKey)
+}
+
+func IsVietnameseRune(lowerKey rune) bool {
+	// lowerKey = unicode.ToLower(lowerKey)
+	if FindToneFromChar(lowerKey) != ToneNone {
+		return true
+	}
+	return lowerKey != AddMarkToTonelessChar(lowerKey, 0)
 }
 
 func HasAnyVietnameseRune(word string) bool {
 	for _, chr := range word {
-		if IsVietnameseRune(chr) {
+		if IsVietnameseRune(unicode.ToLower(chr)) {
+			return true
+		}
+	}
+	return false
+}
+
+func HasAnyVietnameseVower(word string) bool {
+	for _, chr := range word {
+		if IsVowel(unicode.ToLower(chr)) {
 			return true
 		}
 	}

@@ -6,6 +6,7 @@
  * see <https://github.com/BambooEngine/bamboo-core/blob/master/LICENSE>.
  */
 
+// Package bamboo implements text processing for Vietnamese
 package bamboo
 
 import (
@@ -20,8 +21,8 @@ const (
 	ToneLess
 	MarkLess
 	LowerCase
-	WithEffectKeys
-	WithDictionary
+	FullText
+	PunctuationMode
 	InReverseOrder
 )
 
@@ -47,8 +48,7 @@ type IEngine interface {
 	IsValid(bool) bool
 	CanProcessKey(rune) bool
 	RemoveLastChar(bool)
-	RestoreLastWord()
-	GetRawString() string
+	RestoreLastWord(bool)
 	Reset()
 }
 
@@ -78,37 +78,22 @@ func (e *BambooEngine) GetFlag(flag uint) uint {
 	return e.flags
 }
 
-func (e *BambooEngine) isSupportedKey(key rune) bool {
-	if IsAlpha(key) || inKeyList(e.GetInputMethod().Keys, key) {
-		return true
-	}
-	return IsVietnameseRune(key)
-}
-
 func (e *BambooEngine) IsValid(inputIsFullComplete bool) bool {
-	var _, last = extractLastWord(e.composition, e.inputMethod.Keys)
+	var _, last = extractLastWord(e.composition, e.GetInputMethod().Keys)
 	return isValid(last, inputIsFullComplete)
 }
 
-func (e *BambooEngine) GetRawString() string {
-	var seq []rune
-	for _, t := range e.composition {
-		if t.Rule.Key == 0 {
-			continue
-		}
-		seq = append(seq, t.Rule.Key)
-	}
-	return string(seq)
-}
-
 func (e *BambooEngine) GetProcessedString(mode Mode) string {
-	var last []*Transformation
-	if mode&WithEffectKeys != 0 {
-		_, last = extractLastWord(e.composition, e.inputMethod.Keys)
+	var tmp []*Transformation
+	if mode&FullText != 0 {
+		tmp = e.composition
+	} else if mode&PunctuationMode != 0 {
+		_, tmp = extractLastWordWithPunctuationMarks(e.composition, e.inputMethod.Keys)
+		return Flatten(tmp, VietnameseMode)
 	} else {
-		_, last = extractLastWord(e.composition, nil)
+		_, tmp = extractLastWord(e.composition, e.inputMethod.Keys)
 	}
-	return Flatten(last, mode)
+	return Flatten(tmp, mode)
 }
 
 func (e *BambooEngine) getApplicableRules(key rune) []Rule {
@@ -126,7 +111,7 @@ func (e *BambooEngine) findTargetByKey(composition []*Transformation, key rune) 
 }
 
 func (e *BambooEngine) CanProcessKey(key rune) bool {
-	return e.isSupportedKey(key)
+	return canProcessKey(key, e.inputMethod.Keys)
 }
 
 func (e *BambooEngine) generateTransformations(composition []*Transformation, lowerKey rune, isUpperCase bool) []*Transformation {
@@ -154,9 +139,20 @@ func (e *BambooEngine) generateTransformations(composition []*Transformation, lo
 	return transformations
 }
 
+func (e *BambooEngine) newComposition(composition []*Transformation, key rune, isUpperCase bool) []*Transformation {
+	// Just process the key stroke on the last syllable
+	var previousTransformations, lastSyllable = extractLastSyllable(composition)
+
+	// Find all possible transformations this keypress can generate
+	lastSyllable = append(lastSyllable, e.generateTransformations(lastSyllable, key, isUpperCase)...)
+
+	// Put these transformations back to the composition
+	return append(previousTransformations, lastSyllable...)
+}
+
 func (e *BambooEngine) applyUowShortcut(syllable []*Transformation) *Transformation {
 	str := Flatten(syllable, ToneLess|LowerCase)
-	if len(e.inputMethod.SuperKeys) > 0 && regUOh_UhO_Tail.MatchString(str) {
+	if len(e.inputMethod.SuperKeys) > 0 && regUOhTail.MatchString(str) {
 		if target, missingRule := e.findTargetByKey(syllable, e.inputMethod.SuperKeys[0]); target != nil {
 			missingRule.Key = rune(0) // virtual rule should not appear in the raw string
 			virtualTrans := &Transformation{
@@ -187,7 +183,7 @@ func (e *BambooEngine) ProcessString(str string, mode Mode) {
 func (e *BambooEngine) ProcessKey(key rune, mode Mode) {
 	var lowerKey = unicode.ToLower(key)
 	var isUpperCase = unicode.IsUpper(key)
-	if mode&EnglishMode != 0 || !e.isSupportedKey(lowerKey) {
+	if mode&EnglishMode != 0 || !e.CanProcessKey(lowerKey) {
 		if mode&InReverseOrder != 0 {
 			e.composition = append([]*Transformation{newAppendingTrans(lowerKey, isUpperCase)}, e.composition...)
 			return
@@ -195,22 +191,23 @@ func (e *BambooEngine) ProcessKey(key rune, mode Mode) {
 		e.composition = append(e.composition, newAppendingTrans(lowerKey, isUpperCase))
 		return
 	}
-	// Just process the key stroke on the last syllable
-	var previousTransformations, lastSyllable = extractLastSyllable(e.composition)
-
-	// Find all possible transformations this keypress can generate
-	lastSyllable = append(lastSyllable, e.generateTransformations(lastSyllable, lowerKey, isUpperCase)...)
-
-	// Put these transformations back to the composition
-	e.composition = append(previousTransformations, lastSyllable...)
+	e.composition = e.newComposition(e.composition, lowerKey, isUpperCase)
 }
 
-func (e *BambooEngine) RestoreLastWord() {
-	var previous, lastComb = extractLastWord(e.composition, e.inputMethod.Keys)
+func (e *BambooEngine) RestoreLastWord(toVietnamese bool) {
+	var previous, lastComb = extractLastWord(e.composition, e.GetInputMethod().Keys)
 	if len(lastComb) == 0 {
 		return
 	}
-	e.composition = append(previous, breakComposition(lastComb)...)
+	if !toVietnamese {
+		e.composition = append(previous, breakComposition(lastComb)...)
+	} else {
+		var newComp []*Transformation
+		for _, tnx := range lastComb {
+			newComp = e.newComposition(newComp, tnx.Rule.Key, tnx.IsUpperCase)
+		}
+		e.composition = append(previous, newComp...)
+	}
 }
 
 func (e *BambooEngine) Reset() {
@@ -228,7 +225,7 @@ func (e *BambooEngine) RemoveLastChar(refreshLastToneTarget bool) {
 		e.composition = e.composition[:len(e.composition)-1]
 		return
 	}
-	var previous, lastComb = extractLastWord(e.composition, e.inputMethod.Keys)
+	var previous, lastComb = extractLastWord(e.composition, e.GetInputMethod().Keys)
 	var newComb []*Transformation
 	for _, t := range lastComb {
 		if t.Target == lastAppending || t == lastAppending {
